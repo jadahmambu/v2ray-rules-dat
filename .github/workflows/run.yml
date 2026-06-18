@@ -173,7 +173,11 @@ jobs:
           wget -qO ./community/data/rule-sosmed $RULE_SOSMED && cp ./community/data/rule-sosmed rule-sosmed.txt
           wget -qO ./community/data/rule-streaming $RULE_STREAMING && cp ./community/data/rule-streaming rule-streaming.txt
           wget -qO ./community/data/rule-umum $RULE_UMUM && cp ./community/data/rule-umum rule-umum.txt
+          
+          # Unduh aturan ipcheck dan buat alias test-ipv6 agar inclusion terpenuhi
           wget -qO ./community/data/rule-ipcheck $RULE_IPCHECK && cp ./community/data/rule-ipcheck rule-ipcheck.txt
+          cp ./community/data/rule-ipcheck ./community/data/test-ipv6
+          
           wget -qO ./community/data/videoconference $RULE_VIDCONFERENCE && cp ./community/data/videoconference videoconference.txt
           wget -qO ./community/data/urltest $URLTEST && cp ./community/data/urltest urltest.txt
           wget -qO ./community/data/rule-speedtest $RULE_SPEEDTEST && cp ./community/data/rule-speedtest rule-speedtest.txt
