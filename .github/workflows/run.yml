@@ -7,7 +7,6 @@ on:
     paths-ignore:
       - "**/README.md"
 
-# Memberikan izin menulis repositori agar GitHub Actions bisa push branch release
 permissions:
   contents: write
 
@@ -293,17 +292,17 @@ jobs:
           file_glob: true
           file: ./publish/*
 
-      - name: Git push assets to "release" branch
-        run: |
-          cd publish || exit 1
-          git init
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b release
-          git add .
-          git commit -m "${{ env.RELEASE_NAME }}"
-          git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-          git push -f origin release
+      # =========================================================================
+      # PERBAIKAN TOTAL: MENGGUNAKAN AUTOMATIC COMMIT UNTUK REPO FORK
+      # =========================================================================
+      - name: Auto-Commit Assets to "release" branch
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: ${{ env.RELEASE_NAME }}
+          branch: release
+          create_branch: true
+          push_options: '--force'
+          file_pattern: 'publish/*'
 
       - name: Purge jsdelivr CDN
         run: |
@@ -322,4 +321,4 @@ jobs:
 
       - name: Skip External Trigger Synch
         run: |
-          echo "Menghindari error token: Sinkronisasi eksternal dilewati karena berjalan di repo fork."
+          echo "Sinkronisasi dilewati agar tidak memicu error token eksternal."
