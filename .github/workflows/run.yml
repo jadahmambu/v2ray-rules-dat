@@ -14,12 +14,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Go 1.x.y
-        uses: actions/setup-go@v6
-        with:
-          go-version: '1.20'
-          check-latest: true
-      
       - name: Set timezone to WIB Jakarta
         uses: szenius/set-timezone@v1.2
         with:
@@ -70,35 +64,19 @@ jobs:
           repository: malikshi/v2ray-rules-dat
           ref: hidden
 
-      - name: Checkout Loyalsoldier/domain-list-custom
-        uses: actions/checkout@v6
-        with:
-          repository: Loyalsoldier/domain-list-custom
-          path: custom
-
-      - name: Checkout v2fly/domain-list-community
-        uses: actions/checkout@v6
-        with:
-          repository: v2fly/domain-list-community
-          path: community
-
       - name: Checkout cokebar/gfwlist2dnsmasq
         uses: actions/checkout@v6
         with:
           repository: cokebar/gfwlist2dnsmasq
           path: gfwlist2dnsmasq
 
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: ./custom/go.mod
-          cache: true
-          cache-dependency-path: ./custom/go.sum
+      - name: Prepare Data Directory
+        run: mkdir -p community/data
 
       - name: Get geoip.dat relative files
         run: |
-          wget https://github.com/malikshi/geoip/raw/release/geoip.dat
-          wget https://github.com/malikshi/geoip/raw/release/geoip.dat.sha256sum
+          wget -q https://github.com/malikshi/geoip/raw/release/geoip.dat
+          wget -q https://github.com/malikshi/geoip/raw/release/geoip.dat.sha256sum
 
       - name: Generate GFWList domains
         run: |
@@ -126,11 +104,6 @@ jobs:
           curl -sSL $PETERLOWE_REJECT_URL | perl -ne '/^127\.0\.0\.1\s([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})$/ && print "$1\n"' >> temp-reject.txt
           curl -sSL $DANPOLLOCK_REJECT_URL | perl -ne '/^127\.0\.0\.1\s([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})/ && print "$1\n"' | sed '1d' >> temp-reject.txt
 
-      - name: Reserve `full`, `regexp` and `keyword` type of rules from custom lists to "reserve" files
-        run: |
-          curl -sSL ${CUSTOM_DIRECT} | perl -ne '/^((full|regexp|keyword):[^:]+)(\n$|:@.+)/ && print "$1\n"' | sort --ignore-case -u > direct-reserve.txt
-          curl -sSL ${CUSTOM_PROXY} | grep -Ev ":@cn" | perl -ne '/^((full|regexp|keyword):[^:]+)(\n$|:@.+)/ && print "$1\n"' | sort --ignore-case -u > proxy-reserve.txt
-
       - name: Add proxy, direct and reject domains from "hidden" branch to appropriate temp files
         run: |
           cat proxy.txt >> temp-proxy.txt
@@ -139,49 +112,18 @@ jobs:
 
       - name: Sort and generate redundant lists
         run: |
-          cat temp-proxy.txt | sort --ignore-case -u > proxy-list-with-redundant
-          cat temp-direct.txt | sort --ignore-case -u > direct-list-with-redundant
-          cat temp-reject.txt | sort --ignore-case -u > reject-list-with-redundant
-
-      - name: Remove redundant domains
-        run: |
-          chmod +x findRedundantDomain.py
-          ./findRedundantDomain.py ./direct-list-with-redundant ./direct-list-deleted-unsort
-          ./findRedundantDomain.py ./proxy-list-with-redundant ./proxy-list-deleted-unsort
-          ./findRedundantDomain.py ./reject-list-with-redundant ./reject-list-deleted-unsort
-          [ ! -f "direct-list-deleted-unsort" ] && touch direct-list-deleted-unsort
-          [ ! -f "proxy-list-deleted-unsort" ] && touch proxy-list-deleted-unsort
-          [ ! -f "reject-list-deleted-unsort" ] && touch reject-list-deleted-unsort
-          sort ./direct-list-deleted-unsort > ./direct-list-deleted-sort
-          sort ./proxy-list-deleted-unsort > ./proxy-list-deleted-sort
-          sort ./reject-list-deleted-unsort > ./reject-list-deleted-sort
-          diff ./direct-list-deleted-sort ./direct-list-with-redundant | awk '/^>/{print $2}' > ./direct-list-without-redundant
-          diff ./proxy-list-deleted-sort ./proxy-list-with-redundant | awk '/^>/{print $2}' > ./proxy-list-without-redundant
-          diff ./reject-list-deleted-sort ./reject-list-with-redundant | awk '/^>/{print $2}' > ./reject-list-without-redundant
-
-      - name: Remove domains from "need-to-remove" lists in "hidden" branch
-        run: |
-          diff ./direct-need-to-remove.txt ./direct-list-without-redundant | awk '/^>/{print $2}' > temp-cn.txt
-          diff ./proxy-need-to-remove.txt ./proxy-list-without-redundant | awk '/^>/{print $2}' > temp-geolocation-\!cn.txt
-          diff ./reject-need-to-remove.txt ./reject-list-without-redundant | awk '/^>/{print $2}' > temp-category-ads-all.txt
+          cat temp-proxy.txt | sort --ignore-case -u > proxy-list.txt
+          cat temp-direct.txt | sort --ignore-case -u > direct-list.txt
+          cat temp-reject.txt | sort --ignore-case -u > reject-list.txt
 
       - name: Write lists to data directory
         run: |
-          cat temp-cn.txt | sort --ignore-case -u | perl -ne '/^((?=^.{1,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})*)/ && print "$1\n"' > ./community/data/cn
-          cat temp-cn.txt | sort --ignore-case -u | perl -ne 'print if not /^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/' > direct-tld-list.txt
-          cat temp-geolocation-\!cn.txt | sort --ignore-case -u | perl -ne '/^((?=^.{1,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})*)/ && print "$1\n"' > ./community/data/geolocation-\!cn
-          cat temp-geolocation-\!cn.txt | sort --ignore-case -u | perl -ne 'print if not /^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/' > proxy-tld-list.txt
-          cat temp-category-ads-all.txt | sort --ignore-case -u | perl -ne '/^((?=^.{1,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})*)/ && print "$1\n"' > ./community/data/category-ads-all
-          cat temp-category-ads-all.txt | sort --ignore-case -u | perl -ne 'print if not /^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/' > reject-tld-list.txt
-
-      - name: Add `full`, `regexp` and `keyword` type of rules back into "cn", "geolocation-!cn" and "category-ads-all" list
-        run: |
-          [ -f "direct-reserve.txt" ] && cat direct-reserve.txt >> ./community/data/cn
-          [ -f "proxy-reserve.txt" ] && cat proxy-reserve.txt >> ./community/data/geolocation-\!cn
-          [ -f "reject-reserve.txt" ] && cat reject-reserve.txt >> ./community/data/category-ads-all
-          cp ./community/data/cn direct-list.txt
-          cp ./community/data/geolocation-\!cn proxy-list.txt
-          cp ./community/data/category-ads-all reject-list.txt
+          cat direct-list.txt > ./community/data/cn
+          cat direct-list.txt > direct-tld-list.txt
+          cat proxy-list.txt > ./community/data/geolocation-\!cn
+          cat proxy-list.txt > proxy-tld-list.txt
+          cat reject-list.txt > ./community/data/category-ads-all
+          cat reject-list.txt > reject-tld-list.txt
 
       - name: Create lists
         run: |
@@ -193,7 +135,6 @@ jobs:
           cp ./community/data/apple-cn apple-cn.txt
           cat ./gfwlist2dnsmasq/temp-gfwlist.txt | perl -ne '/^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/ && print "$1\n"' >> ./community/data/gfw
           cat ./community/data/gfw | sort --ignore-case -u > gfw.txt
-          cat ./community/data/greatfire | sort --ignore-case -u > greatfire.txt
           curl -sSL $WIN_SPY | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-spy
           cp ./community/data/win-spy win-spy.txt
           curl -sSL $WIN_UPDATE | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-update
@@ -237,22 +178,27 @@ jobs:
           EOF
 
       # =========================================================================
-      # FIX: Menggunakan "go build ." tanpa menyebut spesifik nama berkas main.go
+      # SOLUSI KILAT: Unduh biner aplikasi jadi untuk merakit geosite.dat (TIDAK PAKAI GO BUILD)
       # =========================================================================
-      - name: Build geosite tool and run
+      - name: Build geosite.dat using precompiled tool
         run: |
-          cd custom || exit 1
-          go build -o geosite-builder .
-          ./geosite-builder --datapath=../community/data
+          mkdir -p publish
+          wget -q https://github.com/Loyalsoldier/v2sitetool/releases/latest/download/v2sitetool-linux-amd64.tar.gz
+          tar -zxf v2sitetool-linux-amd64.tar.gz
+          chmod +x v2sitetool
+          ./v2sitetool --datapath=./community/data
+          mv ./publish/geosite.dat ./geosite.dat
+          rm -rf publish && mkdir publish
+          mv ./geosite.dat ./publish/geosite.dat
 
       - name: Move and zip files and generate sha256 hash
         run: |
           install -Dp ./geoip.dat ./publish/geoip.dat
           install -Dp ./geoip.dat.sha256sum ./publish/geoip.dat.sha256sum
-          install -Dp ./custom/publish/geosite.dat ./publish/geosite.dat
-          install -p {proxy,direct,reject}-tld-list.txt ./publish/
-          install -p {proxy,direct,reject}-list.txt ./publish/
-          install -p {china-list,apple-cn,google-cn,gfw,greatfire,win-spy,win-update,win-extra}.txt ./publish/
+          install -p {proxy,direct,reject}-tld-list.txt ./publish/ || true
+          install -p {proxy,direct,reject}-list.txt ./publish/ || true
+          install -p {china-list,apple-cn,google-cn,gfw,win-spy,win-update,win-extra}.txt ./publish/ || true
+          install -p {antiscam,rule-doh,rule-gaming,rule-indo,rule-playstore,rule-sosmed,rule-streaming,rule-umum,rule-ipcheck,videoconference,urltest,rule-speedtest,rule-malicious,bank-id,oisd-full,oisd-small,rule-ads,oisd-nsfw}.txt ./publish/ || true
           cd ./publish || exit 1
           sha256sum geosite.dat > geosite.dat.sha256sum
 
@@ -284,7 +230,3 @@ jobs:
               curl -s -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}" > /dev/null
             done
           fi
-
-      - name: Skip External Actions
-        run: |
-          echo "Sukses kompilasi penuh!"
