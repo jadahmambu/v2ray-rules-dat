@@ -157,9 +157,9 @@ jobs:
           curl -sSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw
           cp ./community/data/oisd-nsfw oisd-nsfw.txt
           
-          # Unduh dan bersihkan antiscam secara total dari karakter non-domain (URL, %, @, ?, /)
+          # Unduh dan bersihkan antiscam secara total dari semua karakter non-domain standar
           wget -qO ./community/data/antiscam $ANTISCAM
-          sed -i '/%/d; /@/d; /\?/d; /\//d' ./community/data/antiscam
+          sed -i '/[^a-zA-Z0-9\.\-]/d' ./community/data/antiscam
           cp ./community/data/antiscam antiscam.txt
           
           wget -qO ./community/data/rule-doh $DOH_DNS && cp ./community/data/rule-doh rule-doh.txt
