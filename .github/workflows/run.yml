@@ -15,9 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
           cache: true
 
       - name: Set timezone to WIB Jakarta
@@ -183,9 +183,6 @@ jobs:
                   file.write(line + "\n")
           EOF
 
-      # =========================================================================
-      # FIX MUTLAK: go install mengunduh biner resmi secara instan & tanpa galat URL
-      # =========================================================================
       - name: Build geosite.dat using Go Install
         run: |
           mkdir -p publish
