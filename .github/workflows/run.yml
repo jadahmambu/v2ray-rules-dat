@@ -156,7 +156,12 @@ jobs:
           cp ./community/data/rule-ads rule-ads.txt
           curl -sSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw
           cp ./community/data/oisd-nsfw oisd-nsfw.txt
-          wget -qO ./community/data/antiscam $ANTISCAM && cp ./community/data/antiscam antiscam.txt
+          
+          # Unduh dan bersihkan antiscam dari karakter ilegal (% dan @)
+          wget -qO ./community/data/antiscam $ANTISCAM
+          sed -i '/%/d; /@/d' ./community/data/antiscam
+          cp ./community/data/antiscam antiscam.txt
+          
           wget -qO ./community/data/rule-doh $DOH_DNS && cp ./community/data/rule-doh rule-doh.txt
           wget -qO ./community/data/rule-gaming $RULE_GAME && cp ./community/data/rule-gaming rule-gaming.txt
           wget -qO ./community/data/rule-indo $RULE_INDO && cp ./community/data/rule-indo rule-indo.txt
