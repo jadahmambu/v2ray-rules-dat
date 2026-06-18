@@ -178,17 +178,14 @@ jobs:
           EOF
 
       # =========================================================================
-      # SOLUSI KILAT: Unduh biner aplikasi jadi untuk merakit geosite.dat (TIDAK PAKAI GO BUILD)
+      # PERBAIKAN: Menggunakan biner v2ray-ext (pembuat geosite alternatif yang valid)
       # =========================================================================
       - name: Build geosite.dat using precompiled tool
         run: |
           mkdir -p publish
-          wget -q https://github.com/Loyalsoldier/v2sitetool/releases/latest/download/v2sitetool-linux-amd64.tar.gz
-          tar -zxf v2sitetool-linux-amd64.tar.gz
-          chmod +x v2sitetool
-          ./v2sitetool --datapath=./community/data
-          mv ./publish/geosite.dat ./geosite.dat
-          rm -rf publish && mkdir publish
+          wget -q https://github.com/v2fly/domain-list-community/releases/latest/download/dlc-linux-amd64
+          chmod +x dlc-linux-amd64
+          ./dlc-linux-amd64 --datapath=./community/data
           mv ./geosite.dat ./publish/geosite.dat
 
       - name: Move and zip files and generate sha256 hash
