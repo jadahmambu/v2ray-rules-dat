@@ -64,9 +64,6 @@ jobs:
           echo "RULE_BANK_ID=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_bank-id.txt" >> $GITHUB_ENV
         shell: bash
 
-      # =========================================================================
-      # FIX: Mengambil branch "hidden" langsung dari repositori upstream (malikshi)
-      # =========================================================================
       - name: Checkout the "hidden" branch from upstream repo
         uses: actions/checkout@v6
         with:
@@ -95,6 +92,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: ./custom/go.mod
+          cache: true
           cache-dependency-path: ./custom/go.sum
 
       - name: Get geoip.dat relative files
@@ -117,7 +115,8 @@ jobs:
         run: |
           cat ./gfwlist2dnsmasq/temp-gfwlist.txt | perl -ne '/^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/ && print "$1\n"' > temp-proxy.txt
           curl -sSL $GOOGLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' >> temp-proxy.txt
-          curl -sSL $APPLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' >> temp-proxy.txt
+          curl -sSL $APPLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' >> temp-apple.txt
+          cat temp-apple.txt >> temp-proxy.txt
           curl -sSL ${CUSTOM_PROXY} | grep -Ev ":@cn" | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' >> temp-proxy.txt
 
       - name: Get and add reject domains into temp-reject.txt file
@@ -184,85 +183,67 @@ jobs:
           cp ./community/data/geolocation-\!cn proxy-list.txt
           cp ./community/data/category-ads-all reject-list.txt
 
-      - name: Create `china-list`、`google-cn`、`apple-cn`、`gfw`、`greatfire` lists
+      - name: Create lists
         run: |
           curl -sSL $CHINA_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/china-list
-          curl -sSL $CHINA_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > china-list.txt
+          cp ./community/data/china-list china-list.txt
           curl -sSL $GOOGLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "full:$1\n"' > ./community/data/google-cn
-          curl -sSL $GOOGLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "full:$1\n"' > google-cn.txt
+          cp ./community/data/google-cn google-cn.txt
           curl -sSL $APPLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "full:$1\n"' > ./community/data/apple-cn
-          curl -sSL $APPLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "full:$1\n"' > apple-cn.txt
+          cp ./community/data/apple-cn apple-cn.txt
           cat ./gfwlist2dnsmasq/temp-gfwlist.txt | perl -ne '/^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/ && print "$1\n"' >> ./community/data/gfw
           cat ./community/data/gfw | sort --ignore-case -u > gfw.txt
           cat ./community/data/greatfire | sort --ignore-case -u > greatfire.txt
           curl -sSL $WIN_SPY | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-spy
-          curl -sSL $WIN_SPY | grep "0.0.0.0" | awk '{print $2}' > win-spy.txt
+          cp ./community/data/win-spy win-spy.txt
           curl -sSL $WIN_UPDATE | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-update
-          curl -sSL $WIN_UPDATE | grep "0.0.0.0" | awk '{print $2}' > win-update.txt
+          cp ./community/data/win-update win-update.txt
           curl -sSL $WIN_EXTRA | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-extra
-          curl -sSL $WIN_EXTRA | grep "0.0.0.0" | awk '{print $2}' > win-extra.txt
+          cp ./community/data/win-extra win-extra.txt
           curl -sSL $OISD_FULL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-full
-          curl -sSL $OISD_FULL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > oisd-full.txt
+          cp ./community/data/oisd-full oisd-full.txt
           curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-small
-          curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > oisd-small.txt
+          cp ./community/data/oisd-small oisd-small.txt
           curl -sSL $RULE_ADS | grep "0.0.0.0" | awk '{print $2}' > ./community/data/rule-ads
           curl -sSL $RULE_ADS_EXTENDED >> ./community/data/rule-ads
-          curl -sSL $RULE_ADS | grep "0.0.0.0" | awk '{print $2}' > rule-ads.txt
-          curl -sSL $RULE_ADS_EXTENDED >> rule-ads.txt
+          cp ./community/data/rule-ads rule-ads.txt
           curl -sSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw
-          curl -sSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > oisd-nsfw.txt
-          wget -O ./community/data/antiscam $ANTISCAM
-          wget -O antiscam.txt $ANTISCAM
-          wget -O ./community/data/rule-doh $DOH_DNS
-          wget -O rule-doh.txt $DOH_DNS
-          wget -O ./community/data/rule-gaming $RULE_GAME
-          wget -O rule-gaming.txt $RULE_GAME
-          wget -O ./community/data/rule-indo $RULE_INDO
-          wget -O rule-indo.txt $RULE_INDO
-          wget -O ./community/data/rule-playstore $RULE_PS
-          wget -O rule-playstore.txt $RULE_PS
-          wget -O ./community/data/rule-sosmed $RULE_SOSMED
-          wget -O rule-sosmed.txt $RULE_SOSMED
-          wget -O ./community/data/rule-streaming $RULE_STREAMING
-          wget -O rule-streaming.txt $RULE_STREAMING
-          wget -O ./community/data/rule-umum $RULE_UMUM
-          wget -O rule-umum.txt $RULE_UMUM
-          wget -O ./community/data/rule-ipcheck $RULE_IPCHECK
-          wget -O rule-ipcheck.txt $RULE_IPCHECK
-          wget -O ./community/data/videoconference $RULE_VIDCONFERENCE
-          wget -O videoconference.txt $RULE_VIDCONFERENCE
-          wget -O ./community/data/urltest $URLTEST
-          wget -O urltest.txt $URLTEST
-          wget -O ./community/data/rule-speedtest $RULE_SPEEDTEST
-          wget -O rule-speedtest.txt $RULE_SPEEDTEST
-          wget -O ./community/data/rule-malicious $MALICIOUS_HOST
-          wget -O rule-malicious.txt $MALICIOUS_HOST
-          wget -O ./community/data/bank-id $RULE_BANK_ID
-          wget -O bank-id.txt $RULE_BANK_ID
+          cp ./community/data/oisd-nsfw oisd-nsfw.txt
+          wget -qO ./community/data/antiscam $ANTISCAM && cp ./community/data/antiscam antiscam.txt
+          wget -qO ./community/data/rule-doh $DOH_DNS && cp ./community/data/rule-doh rule-doh.txt
+          wget -qO ./community/data/rule-gaming $RULE_GAME && cp ./community/data/rule-gaming rule-gaming.txt
+          wget -qO ./community/data/rule-indo $RULE_INDO && cp ./community/data/rule-indo rule-indo.txt
+          wget -qO ./community/data/rule-playstore $RULE_PS && cp ./community/data/rule-playstore rule-playstore.txt
+          wget -qO ./community/data/rule-sosmed $RULE_SOSMED && cp ./community/data/rule-sosmed rule-sosmed.txt
+          wget -qO ./community/data/rule-streaming $RULE_STREAMING && cp ./community/data/rule-streaming rule-streaming.txt
+          wget -qO ./community/data/rule-umum $RULE_UMUM && cp ./community/data/rule-umum rule-umum.txt
+          wget -qO ./community/data/rule-ipcheck $RULE_IPCHECK && cp ./community/data/rule-ipcheck rule-ipcheck.txt
+          wget -qO ./community/data/videoconference $RULE_VIDCONFERENCE && cp ./community/data/videoconference videoconference.txt
+          wget -qO ./community/data/urltest $URLTEST && cp ./community/data/urltest urltest.txt
+          wget -qO ./community/data/rule-speedtest $RULE_SPEEDTEST && cp ./community/data/rule-speedtest rule-speedtest.txt
+          wget -qO ./community/data/rule-malicious $MALICIOUS_HOST && cp ./community/data/rule-malicious rule-malicious.txt
+          wget -qO ./community/data/bank-id $RULE_BANK_ID && cp ./community/data/bank-id bank-id.txt
 
       - name: Filter and save d3ward.txt
         run: |
           python <<EOF
           import requests
-
-          # Fetch the contents of the file from the URL
           url = "https://raw.githubusercontent.com/d3ward/toolz/master/src/d3host.txt"
           response = requests.get(url)
-          data = response.text
-
-          # Filter lines with "0.0.0.0" and spaces and remove "0.0.0.0" text
-          filtered_lines = [line.replace("0.0.0.0 ", "") for line in data.split("\n") if "0.0.0.0 " in line]
-
-          # Save the filtered lines to a file named "d3ward.txt"
+          filtered_lines = [line.replace("0.0.0.0 ", "") for line in response.text.split("\n") if "0.0.0.0 " in line]
           with open("./community/data/d3ward", "w") as file:
               for line in filtered_lines:
                   file.write(line + "\n")
           EOF
 
-      - name: Build geosite.dat file
+      # =========================================================================
+      # OPTIMASI CEPAT: Compile biner Go terlebih dahulu agar tidak terkena limitasi memori
+      # =========================================================================
+      - name: Build geosite tool and run
         run: |
           cd custom || exit 1
-          go run ./ --datapath=../community/data
+          go build -o geosite-builder main.go
+          ./geosite-builder --datapath=../community/data
 
       - name: Move and zip files and generate sha256 hash
         run: |
@@ -277,7 +258,7 @@ jobs:
 
       - name: Convert to Sing-Box geoassets
         run: |
-          wget https://github.com/malikshi/Notes/releases/download/v2box/v2box
+          wget -q https://github.com/malikshi/Notes/releases/download/v2box/v2box
           chmod +x v2box
           ./v2box migrate geoip -i ./publish/geoip.dat -o geoip.db
           ./v2box migrate geosite -i ./publish/geosite.dat -o geosite.db
@@ -300,10 +281,10 @@ jobs:
           if [ -d "publish" ]; then
             cd publish || exit 1
             for file in $(ls); do
-              curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
+              curl -s -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}" > /dev/null
             done
           fi
 
       - name: Skip External Actions
         run: |
-          echo "Selesai! Berhasil bypass branch lokal."
+          echo "Sukses kilat!"
