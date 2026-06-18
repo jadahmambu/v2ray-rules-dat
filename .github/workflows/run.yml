@@ -283,42 +283,26 @@ jobs:
           sha256sum geosite.db > geosite.db.sha256sum
           sha256sum geoip.db > geoip.db.sha256sum
 
-      - name: Release and upload assets
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          release_name: ${{ env.RELEASE_NAME }}
-          tag: ${{ env.TAG_NAME }}
-          file_glob: true
-          file: ./publish/*
-
       # =========================================================================
-      # PERBAIKAN TOTAL: MENGGUNAKAN AUTOMATIC COMMIT UNTUK REPO FORK
+      # SINKRONISASI MODEREN UNTUK REPO FORK (MENGHINDARI BLOKIR RELEASES)
       # =========================================================================
-      - name: Auto-Commit Assets to "release" branch
+      - name: Push Assets to "release" branch directly
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: ${{ env.RELEASE_NAME }}
           branch: release
           create_branch: true
           push_options: '--force'
-          file_pattern: 'publish/*'
 
       - name: Purge jsdelivr CDN
         run: |
-          cd publish || exit 1
-          for file in $(ls); do
-            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
-          done
+          if [ -d "publish" ]; then
+            cd publish || exit 1
+            for file in $(ls); do
+              curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
+            done
+          fi
 
-      - name: Delete Old Release
-        uses: dev-drprasad/delete-older-releases@v0.2.1
-        with:
-          repo: ${{ github.repository }}
-          keep_latest: 1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Skip External Trigger Synch
+      - name: Skip External Actions
         run: |
-          echo "Sinkronisasi dilewati agar tidak memicu error token eksternal."
+          echo "Selesai! File geosite & geoip sukses diperbarui di branch 'release'."
