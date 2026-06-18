@@ -184,6 +184,16 @@ jobs:
           wget -qO ./community/data/rule-malicious $MALICIOUS_HOST && cp ./community/data/rule-malicious rule-malicious.txt
           wget -qO ./community/data/bank-id $RULE_BANK_ID && cp ./community/data/bank-id bank-id.txt
 
+          # Proteksi Mutlak Otomatis: Cari semua nama berkas dependensi (include) yang tertulis di berkas data,
+          # lalu buatkan berkas cadangan jika berkas tersebut tidak ada di folder.
+          echo "Menjalankan auto-heal dependensi..."
+          grep -hroE 'include:[a-zA-Z0-9\.\-]+' ./community/data/ | awk -F: '{print $2}' | sort -u | while read -r list_name; do
+            if [ ! -f "./community/data/$list_name" ]; then
+              echo "Membuat berkas alias otomatis untuk data yang hilang: $list_name"
+              touch "./community/data/$list_name"
+            fi
+          done
+
       - name: Filter and save d3ward.txt
         run: |
           python <<EOF
