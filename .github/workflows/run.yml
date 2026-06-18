@@ -64,9 +64,13 @@ jobs:
           echo "RULE_BANK_ID=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_bank-id.txt" >> $GITHUB_ENV
         shell: bash
 
-      - name: Checkout the "hidden" branch of this repo
+      # =========================================================================
+      # FIX: Mengambil branch "hidden" langsung dari repositori upstream (malikshi)
+      # =========================================================================
+      - name: Checkout the "hidden" branch from upstream repo
         uses: actions/checkout@v6
         with:
+          repository: malikshi/v2ray-rules-dat
           ref: hidden
 
       - name: Checkout Loyalsoldier/domain-list-custom
@@ -283,9 +287,6 @@ jobs:
           sha256sum geosite.db > geosite.db.sha256sum
           sha256sum geoip.db > geoip.db.sha256sum
 
-      # =========================================================================
-      # SINKRONISASI MODEREN UNTUK REPO FORK (MENGHINDARI BLOKIR RELEASES)
-      # =========================================================================
       - name: Push Assets to "release" branch directly
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
@@ -305,4 +306,4 @@ jobs:
 
       - name: Skip External Actions
         run: |
-          echo "Selesai! File geosite & geoip sukses diperbarui di branch 'release'."
+          echo "Selesai! Berhasil bypass branch lokal."
