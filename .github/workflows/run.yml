@@ -237,12 +237,12 @@ jobs:
           EOF
 
       # =========================================================================
-      # OPTIMASI CEPAT: Compile biner Go terlebih dahulu agar tidak terkena limitasi memori
+      # FIX: Menggunakan "go build ." tanpa menyebut spesifik nama berkas main.go
       # =========================================================================
       - name: Build geosite tool and run
         run: |
           cd custom || exit 1
-          go build -o geosite-builder main.go
+          go build -o geosite-builder .
           ./geosite-builder --datapath=../community/data
 
       - name: Move and zip files and generate sha256 hash
@@ -287,4 +287,4 @@ jobs:
 
       - name: Skip External Actions
         run: |
-          echo "Sukses kilat!"
+          echo "Sukses kompilasi penuh!"
