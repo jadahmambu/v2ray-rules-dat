@@ -163,7 +163,11 @@ jobs:
           cp ./community/data/antiscam antiscam.txt
           
           wget -qO ./community/data/rule-doh $DOH_DNS && cp ./community/data/rule-doh rule-doh.txt
+          
+          # Unduh aturan game dan buat alias kategori agar tidak error "list not found"
           wget -qO ./community/data/rule-gaming $RULE_GAME && cp ./community/data/rule-gaming rule-gaming.txt
+          cp ./community/data/rule-gaming ./community/data/category-games
+          
           wget -qO ./community/data/rule-indo $RULE_INDO && cp ./community/data/rule-indo rule-indo.txt
           wget -qO ./community/data/rule-playstore $RULE_PS && cp ./community/data/rule-playstore rule-playstore.txt
           wget -qO ./community/data/rule-sosmed $RULE_SOSMED && cp ./community/data/rule-sosmed rule-sosmed.txt
