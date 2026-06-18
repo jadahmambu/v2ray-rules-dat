@@ -14,6 +14,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.21'
+          cache: true
+
       - name: Set timezone to WIB Jakarta
         uses: szenius/set-timezone@v1.2
         with:
@@ -178,14 +184,13 @@ jobs:
           EOF
 
       # =========================================================================
-      # PERBAIKAN: Menggunakan biner v2ray-ext (pembuat geosite alternatif yang valid)
+      # FIX MUTLAK: go install mengunduh biner resmi secara instan & tanpa galat URL
       # =========================================================================
-      - name: Build geosite.dat using precompiled tool
+      - name: Build geosite.dat using Go Install
         run: |
           mkdir -p publish
-          wget -q https://github.com/v2fly/domain-list-community/releases/latest/download/dlc-linux-amd64
-          chmod +x dlc-linux-amd64
-          ./dlc-linux-amd64 --datapath=./community/data
+          go install github.com/v2fly/domain-list-community@latest
+          ~/go/bin/domain-list-community --datapath=./community/data
           mv ./geosite.dat ./publish/geosite.dat
 
       - name: Move and zip files and generate sha256 hash
