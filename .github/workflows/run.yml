@@ -7,9 +7,7 @@ on:
     paths-ignore:
       - "**/README.md"
 
-# =========================================================================
-# PERBAIKAN UTAMA: MEMBERIKAN IZIN MENULIS REPOSITORI UNTUK GITHUB ACTIONS
-# =========================================================================
+# Memberikan izin menulis repositori agar GitHub Actions bisa push branch release
 permissions:
   contents: write
 
@@ -295,9 +293,6 @@ jobs:
           file_glob: true
           file: ./publish/*
 
-      # =========================================================================
-      # PERBAIKAN: METODE FORCE PUSH ANTI KONFLIK & AMAN DARI ERROR GIT 1
-      # =========================================================================
       - name: Git push assets to "release" branch
         run: |
           cd publish || exit 1
@@ -325,19 +320,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Trigger Synch sing-box-geo
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GHA_WORKFLOW_TRIGGER }}
-          script: |
-            try {
-              const result = await github.rest.actions.createWorkflowDispatch({
-                owner: '${{ github.repository_owner }}',
-                repo: 'sing-box-geo',
-                workflow_id: 'release.yaml',
-                ref: 'master'
-              })
-              console.log(result)
-            } catch(e) {
-              console.log("Sinking repo atau token eksternal dilewati: " + e.message)
-            }
+      - name: Skip External Trigger Synch
+        run: |
+          echo "Menghindari error token: Sinkronisasi eksternal dilewati karena berjalan di repo fork."
