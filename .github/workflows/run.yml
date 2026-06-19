@@ -239,7 +239,7 @@ jobs:
           sha256sum geoip.db > geoip.db.sha256sum
 
       - name: Push Assets to "release" branch directly
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: ${{ env.RELEASE_NAME }}
           branch: release
