@@ -241,14 +241,34 @@ jobs:
 
       - name: Push Assets to "release" branch directly
         run: |
-          cd ./publish
-          git init
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # 1. Konfigurasi identitas robot Git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # 2. Buat folder sementara terisolasi
+          mkdir -p git_deploy
+          cd git_deploy
+          
+          # 3. Ambil isi cabang 'release' dari GitHub (buat baru jika belum ada)
+          git clone --single-branch --branch release "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" . || git init
+          
+          # 4. Bersihkan berkas usang lama (kecuali folder .git internal)
+          find . -maxdepth 1 ! -name '.' ! -name '..' ! -name '.git' -exec rm -rf {} +
+          
+          # 5. Masukkan seluruh aset segar hasil kompilasi baru dari folder hulu
+          cp -r ../publish/* .
+          
+          # 6. Setel remote origin jika cabang release baru pertama kali diinisiasi
+          if [ ! -d ".git/refs/remotes/origin" ]; then
+            git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+            git branch -M release
+          fi
+          
+          # 7. Daftarkan seluruh aset secara paksa (Abaikan saringan .gitignore)
           git add -f .
-          git commit -m "${{ env.RELEASE_NAME }}"
-          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-          git branch -M release
+          
+          # 8. Eksekusi komit & push paksa ke target cabang di GitHub Anda
+          git commit -m "${{ env.RELEASE_NAME }}" || echo "Tidak ada perubahan berkas baru."
           git push -f origin release
 
       - name: Purge jsdelivr CDN
