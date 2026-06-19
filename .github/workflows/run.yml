@@ -213,7 +213,6 @@ jobs:
           mkdir -p publish
           go install github.com/v2fly/domain-list-community@latest
           ~/go/bin/domain-list-community --datapath=./community/data
-          # Memindahkan berkas dlc.dat yang berhasil diproduksi kompilator baru menjadi geosite.dat
           mv ./dlc.dat ./publish/geosite.dat
 
       - name: Move and zip files and generate sha256 hash
@@ -246,6 +245,8 @@ jobs:
           branch: release
           create_branch: true
           push_options: '--force'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Purge jsdelivr CDN
         run: |
