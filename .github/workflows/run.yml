@@ -7,11 +7,8 @@ on:
     paths-ignore:
       - "**/README.md"
 
-# Mengizinkan robot GitHub melakukan deploy Pages secara penuh tanpa batasan Git
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
   build:
@@ -242,14 +239,37 @@ jobs:
           sha256sum geosite.db > geosite.db.sha256sum
           sha256sum geoip.db > geoip.db.sha256sum
 
-      # Langkah Baru Sempurna 1: Mengemas seluruh isi folder publish menjadi artefak Pages resmi
-      - name: Upload Artifact for Deployment
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./publish
+      # PERBAIKAN TOTAL: Melakukan push dengan teknik isolasi murni (Orphan Push)
+      - name: Push Assets to "release" branch directly
+        run: |
+          # 1. Konfigurasi identitas robot Git lokal
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # 2. Masuk ke folder publish yang berisi aset segar
+          cd ./publish
+          
+          # 3. Inisiasi Git baru secara paksa di folder ini saja untuk memutus riwayat rusak lama
+          git init
+          git checkout -b release
+          
+          # 4. Ambil seluruh berkas hasil build untuk dilacak
+          git add -f .
+          
+          # 5. Buat komit lokal independen
+          git commit -m "Released on $(date +%Y%m%d%H%M)" || echo "Tidak ada perubahan berkas baru."
+          
+          # 6. Hubungkan langsung ke repositori hulu Anda
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          
+          # 7. Push paksa untuk menimpa total cabang release lama di GitHub Anda
+          git push -f origin release
 
-      # Langkah Baru Sempurna 2: Mengirim paksa langsung ke penyimpanan rilis publik
-      - name: Deploy Assets to release branch cleanly
-        uses: actions/deploy-pages@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Purge jsdelivr CDN
+        run: |
+          if [ -d "publish" ]; then
+            cd publish || exit 1
+            for file in $(ls); do
+              curl -s -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}" > /dev/null
+            done
+          fi
