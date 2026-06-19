@@ -76,6 +76,9 @@ jobs:
           repository: cokebar/gfwlist2dnsmasq
           path: gfwlist2dnsmasq
 
+      - name: De-submodule gfwlist2dnsmasq folder
+        run: rm -rf gfwlist2dnsmasq/.git
+
       - name: Prepare Data Directory
         run: mkdir -p community/data
 
