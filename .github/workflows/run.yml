@@ -65,6 +65,9 @@ jobs:
           echo "RULE_SPEEDTEST=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_speedtest.txt" >> $GITHUB_ENV
           echo "MALICIOUS_HOST=https://raw.githubusercontent.com/elliotwutingfeng/Inversion-DNSBL-Blocklists/main/Google_hostnames_light.txt" >> $GITHUB_ENV
           echo "RULE_BANK_ID=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_bank-id.txt" >> $GITHUB_ENV
+          
+          # JALUR KHUSUS MILIK REPO ANDA SENDIRI
+          echo "RULE_ECO=https://raw.githubusercontent.com/jadahmambu/ocrule/main/rule_eco.txt" >> $GITHUB_ENV
         shell: bash
 
       - name: Checkout the "hidden" branch from upstream repo
@@ -181,6 +184,9 @@ jobs:
           wget -qO ./community/data/rule-streaming $RULE_STREAMING && cp ./community/data/rule-streaming rule-streaming.txt
           wget -qO ./community/data/rule-umum $RULE_UMUM && cp ./community/data/rule-umum rule-umum.txt
           
+          # PROSES AMBIL DATA DAN INJEKSI TAG BARU: rule-eco
+          wget -qO ./community/data/rule-eco $RULE_ECO && cp ./community/data/rule-eco rule-eco.txt
+
           # Unduh aturan ipcheck dan buat isi data test-ipv6 terpisah agar terhindar dari perulangan melingkar
           wget -qO ./community/data/rule-ipcheck $RULE_IPCHECK && cp ./community/data/rule-ipcheck rule-ipcheck.txt
           echo "full:ipv6.google.com" > ./community/data/test-ipv6
@@ -226,7 +232,7 @@ jobs:
           install -p {proxy,direct,reject}-tld-list.txt ./publish/ || true
           install -p {proxy,direct,reject}-list.txt ./publish/ || true
           install -p {china-list,apple-cn,google-cn,gfw,win-spy,win-update,win-extra}.txt ./publish/ || true
-          install -p {antiscam,rule-doh,rule-gaming,rule-indo,rule-playstore,rule-sosmed,rule-streaming,rule-umum,rule-ipcheck,videoconference,urltest,rule-speedtest,rule-malicious,bank-id,oisd-full,oisd-small,rule-ads,oisd-nsfw}.txt ./publish/ || true
+          install -p {antiscam,rule-doh,rule-gaming,rule-indo,rule-playstore,rule-sosmed,rule-streaming,rule-umum,rule-ipcheck,videoconference,urltest,rule-speedtest,rule-malicious,bank-id,oisd-full,oisd-small,rule-ads,oisd-nsfw,rule-eco}.txt ./publish/ || true
           cd ./publish || exit 1
           sha256sum geosite.dat > geosite.dat.sha256sum
 
