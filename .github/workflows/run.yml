@@ -239,31 +239,37 @@ jobs:
           sha256sum geosite.db > geosite.db.sha256sum
           sha256sum geoip.db > geoip.db.sha256sum
 
-      # PERBAIKAN TOTAL: Melakukan push dengan teknik isolasi murni (Orphan Push)
       - name: Push Assets to "release" branch directly
         run: |
           # 1. Konfigurasi identitas robot Git lokal
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # 2. Masuk ke folder publish yang berisi aset segar
+          # 2. Setel remote URL utama dengan Token Akses di folder kerja saat ini
+          git remote add origin-delete "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" || true
+          
+          # 3. Eksekusi penghapusan cabang 'release' yang rusak langsung di peladen GitHub (Bypass Cache)
+          echo "Menghapus cabang rilis lama yang korup dari hulu..."
+          git push origin-delete --delete release || echo "Cabang rilis memang belum ada atau sudah bersih."
+          
+          # 4. Masuk ke folder publish yang berisi aset segar
           cd ./publish
           
-          # 3. Inisiasi Git baru secara paksa di folder ini saja untuk memutus riwayat rusak lama
+          # 5. Inisiasi Git baru secara bersih
           git init
           git checkout -b release
           
-          # 4. Ambil seluruh berkas hasil build untuk dilacak
+          # 6. Ambil seluruh berkas hasil build untuk dilacak
           git add -f .
           
-          # 5. Buat komit lokal independen
+          # 7. Buat komit lokal baru
           git commit -m "Released on $(date +%Y%m%d%H%M)" || echo "Tidak ada perubahan berkas baru."
           
-          # 6. Hubungkan langsung ke repositori hulu Anda
+          # 8. Hubungkan langsung ke repositori hulu Anda
           git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           
-          # 7. Push paksa untuk menimpa total cabang release lama di GitHub Anda
-          git push -f origin release
+          # 9. Push cabang segar yang dijamin memiliki riwayat bersih
+          git push -u origin release
 
       - name: Purge jsdelivr CDN
         run: |
