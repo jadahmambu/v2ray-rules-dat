@@ -239,43 +239,14 @@ jobs:
           sha256sum geosite.db > geosite.db.sha256sum
           sha256sum geoip.db > geoip.db.sha256sum
 
-      - name: Push Assets to "release" branch directly
-        run: |
-          # 1. Konfigurasi identitas robot Git lokal
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          # 2. Setel remote URL utama dengan Token Akses di folder kerja saat ini
-          git remote add origin-delete "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" || true
-          
-          # 3. Eksekusi penghapusan cabang 'release' yang rusak langsung di peladen GitHub (Bypass Cache)
-          echo "Menghapus cabang rilis lama yang korup dari hulu..."
-          git push origin-delete --delete release || echo "Cabang rilis memang belum ada atau sudah bersih."
-          
-          # 4. Masuk ke folder publish yang berisi aset segar
-          cd ./publish
-          
-          # 5. Inisiasi Git baru secara bersih
-          git init
-          git checkout -b release
-          
-          # 6. Ambil seluruh berkas hasil build untuk dilacak
-          git add -f .
-          
-          # 7. Buat komit lokal baru
-          git commit -m "Released on $(date +%Y%m%d%H%M)" || echo "Tidak ada perubahan berkas baru."
-          
-          # 8. Hubungkan langsung ke repositori hulu Anda
-          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-          
-          # 9. Push cabang segar yang dijamin memiliki riwayat bersih
-          git push -u origin release
-
-      - name: Purge jsdelivr CDN
-        run: |
-          if [ -d "publish" ]; then
-            cd publish || exit 1
-            for file in $(ls); do
-              curl -s -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}" > /dev/null
-            done
-          fi
+      # PERUBAHAN TOTAL: Menggunakan fitur Release resmi GitHub yang anti-blokir proteksi cabang
+      - name: Deploy to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          name: latest
+          tag_name: latest
+          draft: false
+          prerelease: false
+          files: ./publish/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
