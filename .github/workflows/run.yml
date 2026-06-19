@@ -65,14 +65,14 @@ jobs:
         shell: bash
 
       - name: Checkout the "hidden" branch from upstream repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: malikshi/v2ray-rules-dat
           ref: hidden
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout cokebar/gfwlist2dnsmasq
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: cokebar/gfwlist2dnsmasq
           path: gfwlist2dnsmasq
