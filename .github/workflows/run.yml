@@ -240,14 +240,16 @@ jobs:
           sha256sum geoip.db > geoip.db.sha256sum
 
       - name: Push Assets to "release" branch directly
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: ${{ env.RELEASE_NAME }}
-          branch: release
-          create_branch: true
-          push_options: '--force'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd ./publish
+          git init
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "${{ env.RELEASE_NAME }}"
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git branch -M release
+          git push -f origin release
 
       - name: Purge jsdelivr CDN
         run: |
