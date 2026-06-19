@@ -239,7 +239,7 @@ jobs:
           sha256sum geosite.db > geosite.db.sha256sum
           sha256sum geoip.db > geoip.db.sha256sum
 
-      # PERUBAHAN TOTAL: Menggunakan fitur Release resmi GitHub yang anti-blokir proteksi cabang
+      # Eksekusi rilis publik ke fitur GitHub Releases
       - name: Deploy to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
