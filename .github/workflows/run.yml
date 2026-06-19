@@ -69,6 +69,7 @@ jobs:
         with:
           repository: malikshi/v2ray-rules-dat
           ref: hidden
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout cokebar/gfwlist2dnsmasq
         uses: actions/checkout@v6
