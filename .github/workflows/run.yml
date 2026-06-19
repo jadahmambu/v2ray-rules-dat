@@ -6,6 +6,9 @@ on:
       - master
     paths-ignore:
       - "**/README.md"
+  schedule:
+    # Berjalan otomatis setiap hari jam 17:30 UTC (Sama dengan 00:30 WIB)
+    - cron: '30 17 * * *'
 
 permissions:
   contents: write
