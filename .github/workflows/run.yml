@@ -66,7 +66,7 @@ jobs:
           echo "MALICIOUS_HOST=https://raw.githubusercontent.com/elliotwutingfeng/Inversion-DNSBL-Blocklists/main/Google_hostnames_light.txt" >> $GITHUB_ENV
           echo "RULE_BANK_ID=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_bank-id.txt" >> $GITHUB_ENV
           
-          # JALUR KHUSUS MILIK REPO ANDA SENDIRI
+          # JALUR KHUSUS REPO ANDA
           echo "RULE_ECO=https://raw.githubusercontent.com/jadahmambu/ocrule/main/rule_eco.txt" >> $GITHUB_ENV
         shell: bash
 
@@ -161,20 +161,19 @@ jobs:
           cp ./community/data/oisd-full oisd-full.txt
           curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-small
           cp ./community/data/oisd-small oisd-small.txt
+          
           curl -sSL $RULE_ADS | grep "0.0.0.0" | awk '{print $2}' > ./community/data/rule-ads
           curl -sSL $RULE_ADS_EXTENDED >> ./community/data/rule-ads
           cp ./community/data/rule-ads rule-ads.txt
+          
           curl -sSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw
           cp ./community/data/oisd-nsfw oisd-nsfw.txt
           
-          # Unduh dan bersihkan antiscam secara total dari semua karakter non-domain standar
           wget -qO ./community/data/antiscam $ANTISCAM
           sed -i '/[^a-zA-Z0-9\.\-]/d' ./community/data/antiscam
           cp ./community/data/antiscam antiscam.txt
           
           wget -qO ./community/data/rule-doh $DOH_DNS && cp ./community/data/rule-doh rule-doh.txt
-          
-          # Unduh aturan game dan buat alias kategori dengan isi domain mandiri (menghindari loop circular)
           wget -qO ./community/data/rule-gaming $RULE_GAME && cp ./community/data/rule-gaming rule-gaming.txt
           echo "full:steampowered.com" > ./community/data/category-games
           
@@ -184,10 +183,15 @@ jobs:
           wget -qO ./community/data/rule-streaming $RULE_STREAMING && cp ./community/data/rule-streaming rule-streaming.txt
           wget -qO ./community/data/rule-umum $RULE_UMUM && cp ./community/data/rule-umum rule-umum.txt
           
-          # PROSES AMBIL DATA DAN INJEKSI TAG BARU: rule-eco
-          wget -qO ./community/data/rule-eco $RULE_ECO && cp ./community/data/rule-eco rule-eco.txt
+          # =========================================================================
+          # PROSES UNDUH & DOUBLE-CLEANING KHUSUS UNTUK RULE-ECO ANDA
+          # =========================================================================
+          wget -qO ./community/data/rule-eco $RULE_ECO
+          sed -i 's/\r//g' ./community/data/rule-eco
+          sed -i '/^[[:space:]]*$/d' ./community/data/rule-eco
+          cp ./community/data/rule-eco rule-eco.txt
+          # =========================================================================
 
-          # Unduh aturan ipcheck dan buat isi data test-ipv6 terpisah agar terhindar dari perulangan melingkar
           wget -qO ./community/data/rule-ipcheck $RULE_IPCHECK && cp ./community/data/rule-ipcheck rule-ipcheck.txt
           echo "full:ipv6.google.com" > ./community/data/test-ipv6
           
@@ -197,7 +201,7 @@ jobs:
           wget -qO ./community/data/rule-malicious $MALICIOUS_HOST && cp ./community/data/rule-malicious rule-malicious.txt
           wget -qO ./community/data/bank-id $RULE_BANK_ID && cp ./community/data/bank-id bank-id.txt
 
-          # Proteksi Mutlak Dinamis Berbasis Domain Dummy (Aman dari Circular & Empty List)
+          # Pendeteksi & Penambal Otomatis File Dummy
           echo "Menjalankan mesin penyembuh dependensi..."
           grep -hroE 'include:[a-zA-Z0-9\.\-]+' ./community/data/ | awk -F: '{print $2}' | sort -u | while read -r list_name; do
             if [ ! -f "./community/data/$list_name" ]; then
@@ -248,7 +252,6 @@ jobs:
           sha256sum geosite.db > geosite.db.sha256sum
           sha256sum geoip.db > geoip.db.sha256sum
 
-      # Eksekusi rilis publik ke fitur GitHub Releases
       - name: Deploy to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
