@@ -66,8 +66,9 @@ jobs:
           echo "MALICIOUS_HOST=https://raw.githubusercontent.com/elliotwutingfeng/Inversion-DNSBL-Blocklists/main/Google_hostnames_light.txt" >> $GITHUB_ENV
           echo "RULE_BANK_ID=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_bank-id.txt" >> $GITHUB_ENV
           
-          # JALUR KHUSUS REPO ANDA
+          # JALUR REPO ANDA (ECO DAN MICROSOFT)
           echo "RULE_ECO=https://raw.githubusercontent.com/jadahmambu/ocrule/main/rule_eco.txt" >> $GITHUB_ENV
+          echo "RULE_MICROSOFT=https://raw.githubusercontent.com/jadahmambu/ocrule/main/rule_microsoft.txt" >> $GITHUB_ENV
         shell: bash
 
       - name: Checkout the "hidden" branch from upstream repo
@@ -184,12 +185,17 @@ jobs:
           wget -qO ./community/data/rule-umum $RULE_UMUM && cp ./community/data/rule-umum rule-umum.txt
           
           # =========================================================================
-          # PROSES UNDUH & DOUBLE-CLEANING KHUSUS UNTUK RULE-ECO ANDA
+          # PROSES UNDUH & DOUBLE-CLEANING KUSTOM (RULE-ECO & RULE-MICROSOFT)
           # =========================================================================
           wget -qO ./community/data/rule-eco $RULE_ECO
           sed -i 's/\r//g' ./community/data/rule-eco
           sed -i '/^[[:space:]]*$/d' ./community/data/rule-eco
           cp ./community/data/rule-eco rule-eco.txt
+
+          wget -qO ./community/data/rule-microsoft $RULE_MICROSOFT
+          sed -i 's/\r//g' ./community/data/rule-microsoft
+          sed -i '/^[[:space:]]*$/d' ./community/data/rule-microsoft
+          cp ./community/data/rule-microsoft rule-microsoft.txt
           # =========================================================================
 
           wget -qO ./community/data/rule-ipcheck $RULE_IPCHECK && cp ./community/data/rule-ipcheck rule-ipcheck.txt
@@ -236,7 +242,7 @@ jobs:
           install -p {proxy,direct,reject}-tld-list.txt ./publish/ || true
           install -p {proxy,direct,reject}-list.txt ./publish/ || true
           install -p {china-list,apple-cn,google-cn,gfw,win-spy,win-update,win-extra}.txt ./publish/ || true
-          install -p {antiscam,rule-doh,rule-gaming,rule-indo,rule-playstore,rule-sosmed,rule-streaming,rule-umum,rule-ipcheck,videoconference,urltest,rule-speedtest,rule-malicious,bank-id,oisd-full,oisd-small,rule-ads,oisd-nsfw,rule-eco}.txt ./publish/ || true
+          install -p {antiscam,rule-doh,rule-gaming,rule-indo,rule-playstore,rule-sosmed,rule-streaming,rule-umum,rule-ipcheck,videoconference,urltest,rule-speedtest,rule-malicious,bank-id,oisd-full,oisd-small,rule-ads,oisd-nsfw,rule-eco,rule-microsoft}.txt ./publish/ || true
           cd ./publish || exit 1
           sha256sum geosite.dat > geosite.dat.sha256sum
 
