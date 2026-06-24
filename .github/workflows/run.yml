@@ -35,7 +35,7 @@ jobs:
           echo "RELEASE_NAME=Released on $(date +%Y%m%d%H%M)" >> $GITHUB_ENV
           echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
           
-          # MENGGUNAKAN JSDELIVR CDN AGAR TIDAK TERKENA EROR EXIT CODE 8 / 404 / RATE LIMIT HULU
+          # PERBAIKAN: Menggunakan jsDelivr CDN agar terhindar dari Error Exit Code 8 / 404 / Rate Limit
           echo "CHINA_DOMAINS_URL=https://fastly.jsdelivr.net/gh/felixonmars/dnsmasq-china-list@master/accelerated-domains.china.conf" >> $GITHUB_ENV
           echo "GOOGLE_DOMAINS_URL=https://fastly.jsdelivr.net/gh/felixonmars/dnsmasq-china-list@master/google.china.conf" >> $GITHUB_ENV
           echo "APPLE_DOMAINS_URL=https://fastly.jsdelivr.net/gh/felixonmars/dnsmasq-china-list@master/apple.china.conf" >> $GITHUB_ENV
