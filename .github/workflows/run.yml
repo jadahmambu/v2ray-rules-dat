@@ -1,273 +1,264 @@
 name: Build V2Ray rules dat files
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - "**/README.md"
-  schedule:
-    # Berjalan otomatis setiap hari jam 17:30 UTC (Sama dengan 00:30 WIB)
-    - cron: '30 17 * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "**/README.md"
+  schedule:
+    # Berjalan otomatis setiap hari jam 17:30 UTC (Sama dengan 00:30 WIB)
+    - cron: '30 17 * * *'
 
 permissions:
-  contents: write
+  contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache: true
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
 
-      - name: Set timezone to WIB Jakarta
-        uses: szenius/set-timezone@v1.2
-        with:
-          timezoneLinux: "Asia/Jakarta"
-          timezoneMacos: "Asia/Jakarta"
-          timezoneWindows: "Indonesia Standard Time"
+      - name: Set timezone to WIB Jakarta
+        uses: szenius/set-timezone@v1.2
+        with:
+          timezoneLinux: "Asia/Jakarta"
+          timezoneMacos: "Asia/Jakarta"
+          timezoneWindows: "Indonesia Standard Time"
 
-      - name: Set variables
-        run: |
-          echo "RELEASE_NAME=Released on $(date +%Y%m%d%H%M)" >> $GITHUB_ENV
-          echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
-          
-          # MENGGUNAKAN JSDELIVR CDN AGAR TIDAK TERKENA EROR EXIT CODE 8 / 404 / RATE LIMIT HULU
-          echo "CHINA_DOMAINS_URL=https://fastly.jsdelivr.net/gh/felixonmars/dnsmasq-china-list@master/accelerated-domains.china.conf" >> $GITHUB_ENV
-          echo "GOOGLE_DOMAINS_URL=https://fastly.jsdelivr.net/gh/felixonmars/dnsmasq-china-list@master/google.china.conf" >> $GITHUB_ENV
-          echo "APPLE_DOMAINS_URL=https://fastly.jsdelivr.net/gh/felixonmars/dnsmasq-china-list@master/apple.china.conf" >> $GITHUB_ENV
-          
-          echo "EASYLISTCHINA_EASYLIST_REJECT_URL=https://easylist-downloads.adblockplus.org/easylistchina+easylist.txt" >> $GITHUB_ENV
-          echo "PETERLOWE_REJECT_URL=https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext" >> $GITHUB_ENV
-          echo "ADGUARD_DNS_REJECT_URL=https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt" >> $GITHUB_ENV
-          echo "DANPOLLOCK_REJECT_URL=https://someonewhocares.org/hosts/hosts" >> $GITHUB_ENV
-          echo "CUSTOM_DIRECT=https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/release/cn.txt" >> $GITHUB_ENV
-          echo "CUSTOM_PROXY=https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/release/geolocation-!cn.txt" >> $GITHUB_ENV
-          echo "WIN_SPY=https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt" >> $GITHUB_ENV
-          echo "WIN_UPDATE=https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/update.txt" >> $GITHUB_ENV
-          echo "WIN_EXTRA=https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/extra.txt" >> $GITHUB_ENV
-          echo "OISD_FULL=https://big.oisd.nl/dnsmasq" >> $GITHUB_ENV
-          echo "OISD_SMALL=https://small.oisd.nl/dnsmasq" >> $GITHUB_ENV
-          echo "OISD_NSFW=https://nsfw.oisd.nl/dnsmasq" >> $GITHUB_ENV
-          echo "ANTISCAM=https://raw.githubusercontent.com/malikshi/antiscam/refs/heads/main/antiscam.txt" >> $GITHUB_ENV
-          echo "DOH_DNS=https://raw.githubusercontent.com/malikshi/dns_ip/main/domains-doh.txt" >> $GITHUB_ENV
-          echo "RULE_ADS=https://raw.githubusercontent.com/d3ward/toolz/master/src/d3host.txt" >> $GITHUB_ENV
-          echo "RULE_ADS_EXTENDED=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_ads.txt" >> $GITHUB_ENV
-          echo "RULE_GAME=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_gaming.txt" >> $GITHUB_ENV
-          echo "RULE_INDO=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_indo.txt" >> $GITHUB_ENV
-          echo "RULE_PS=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_playstore.txt" >> $GITHUB_ENV
-          echo "RULE_SOSMED=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_sosmed.txt" >> $GITHUB_ENV
-          echo "RULE_STREAMING=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_streaming.txt" >> $GITHUB_ENV
-          echo "RULE_UMUM=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_umum.txt" >> $GITHUB_ENV
-          echo "RULE_IPCHECK=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_ipcheck.txt" >> $GITHUB_ENV
-          echo "RULE_VIDCONFERENCE=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule-videoconference.txt" >> $GITHUB_ENV
-          echo "URLTEST=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/urltest.txt" >> $GITHUB_ENV
-          echo "RULE_SPEEDTEST=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_speedtest.txt" >> $GITHUB_ENV
-          echo "MALICIOUS_HOST=https://raw.githubusercontent.com/elliotwutingfeng/Inversion-DNSBL-Blocklists/main/Google_hostnames_light.txt" >> $GITHUB_ENV
-          echo "RULE_BANK_ID=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_bank-id.txt" >> $GITHUB_ENV
-          
-          # JALUR REPO ANDA (ECO DAN MICROSOFT)
-          echo "RULE_ECO=https://raw.githubusercontent.com/jadahmambu/ocrule/main/rule_eco.txt" >> $GITHUB_ENV
-          echo "RULE_MICROSOFT=https://raw.githubusercontent.com/jadahmambu/ocrule/main/rule_microsoft.txt" >> $GITHUB_ENV
-        shell: bash
+      - name: Set variables
+        run: |
+          echo "RELEASE_NAME=Released on $(date +%Y%m%d%H%M)" >> $GITHUB_ENV
+          echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
+          echo "CHINA_DOMAINS_URL=https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf" >> $GITHUB_ENV
+          echo "GOOGLE_DOMAINS_URL=https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf" >> $GITHUB_ENV
+          echo "APPLE_DOMAINS_URL=https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/apple.china.conf" >> $GITHUB_ENV
+          echo "EASYLISTCHINA_EASYLIST_REJECT_URL=https://easylist-downloads.adblockplus.org/easylistchina+easylist.txt" >> $GITHUB_ENV
+          echo "PETERLOWE_REJECT_URL=https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext" >> $GITHUB_ENV
+          echo "ADGUARD_DNS_REJECT_URL=https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt" >> $GITHUB_ENV
+          echo "DANPOLLOCK_REJECT_URL=https://someonewhocares.org/hosts/hosts" >> $GITHUB_ENV
+          echo "CUSTOM_DIRECT=https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/release/cn.txt" >> $GITHUB_ENV
+          echo "CUSTOM_PROXY=https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/release/geolocation-!cn.txt" >> $GITHUB_ENV
+          echo "WIN_SPY=https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt" >> $GITHUB_ENV
+          echo "WIN_UPDATE=https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/update.txt" >> $GITHUB_ENV
+          echo "WIN_EXTRA=https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/extra.txt" >> $GITHUB_ENV
+          echo "OISD_FULL=https://big.oisd.nl/dnsmasq" >> $GITHUB_ENV
+          echo "OISD_SMALL=https://small.oisd.nl/dnsmasq" >> $GITHUB_ENV
+          echo "OISD_NSFW=https://nsfw.oisd.nl/dnsmasq" >> $GITHUB_ENV
+          echo "ANTISCAM=https://raw.githubusercontent.com/malikshi/antiscam/refs/heads/main/antiscam.txt" >> $GITHUB_ENV
+          echo "DOH_DNS=https://raw.githubusercontent.com/malikshi/dns_ip/main/domains-doh.txt" >> $GITHUB_ENV
+          echo "RULE_ADS=https://raw.githubusercontent.com/d3ward/toolz/master/src/d3host.txt" >> $GITHUB_ENV
+          echo "RULE_ADS_EXTENDED=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_ads.txt" >> $GITHUB_ENV
+          echo "RULE_GAME=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_gaming.txt" >> $GITHUB_ENV
+          echo "RULE_INDO=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_indo.txt" >> $GITHUB_ENV
+          echo "RULE_PS=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_playstore.txt" >> $GITHUB_ENV
+          echo "RULE_SOSMED=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_sosmed.txt" >> $GITHUB_ENV
+          echo "RULE_STREAMING=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_streaming.txt" >> $GITHUB_ENV
+          echo "RULE_UMUM=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_umum.txt" >> $GITHUB_ENV
+          echo "RULE_IPCHECK=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_ipcheck.txt" >> $GITHUB_ENV
+          echo "RULE_VIDCONFERENCE=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule-videoconference.txt" >> $GITHUB_ENV
+          echo "URLTEST=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/urltest.txt" >> $GITHUB_ENV
+          echo "RULE_SPEEDTEST=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_speedtest.txt" >> $GITHUB_ENV
+          echo "MALICIOUS_HOST=https://raw.githubusercontent.com/elliotwutingfeng/Inversion-DNSBL-Blocklists/main/Google_hostnames_light.txt" >> $GITHUB_ENV
+          echo "RULE_BANK_ID=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_bank-id.txt" >> $GITHUB_ENV
+          
+          # JALUR KHUSUS REPO ANDA
+          echo "RULE_ECO=https://raw.githubusercontent.com/jadahmambu/ocrule/main/rule_eco.txt" >> $GITHUB_ENV
+        shell: bash
 
-      - name: Checkout the "hidden" branch from upstream repo
-        uses: actions/checkout@v6
-        with:
-          repository: malikshi/v2ray-rules-dat
-          ref: hidden
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout the "hidden" branch from upstream repo
+        uses: actions/checkout@v6
+        with:
+          repository: malikshi/v2ray-rules-dat
+          ref: hidden
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout cokebar/gfwlist2dnsmasq
-        uses: actions/checkout@v6
-        with:
-          repository: cokebar/gfwlist2dnsmasq
-          path: gfwlist2dnsmasq
+      - name: Checkout cokebar/gfwlist2dnsmasq
+        uses: actions/checkout@v6
+        with:
+          repository: cokebar/gfwlist2dnsmasq
+          path: gfwlist2dnsmasq
 
-      - name: De-submodule gfwlist2dnsmasq folder
-        run: rm -rf gfwlist2dnsmasq/.git
+      - name: De-submodule gfwlist2dnsmasq folder
+        run: rm -rf gfwlist2dnsmasq/.git
 
-      - name: Prepare Data Directory
-        run: mkdir -p community/data
+      - name: Prepare Data Directory
+        run: mkdir -p community/data
 
-      - name: Get geoip.dat relative files
-        run: |
-          wget -q https://github.com/malikshi/geoip/raw/release/geoip.dat
-          wget -q https://github.com/malikshi/geoip/raw/release/geoip.dat.sha256sum
+      - name: Get geoip.dat relative files
+        run: |
+          wget -q https://github.com/malikshi/geoip/raw/release/geoip.dat
+          wget -q https://github.com/malikshi/geoip/raw/release/geoip.dat.sha256sum
 
-      - name: Generate GFWList domains
-        run: |
-          cd gfwlist2dnsmasq || exit 1
-          chmod +x ./gfwlist2dnsmasq.sh
-          ./gfwlist2dnsmasq.sh -l -o ./temp-gfwlist.txt
+      - name: Generate GFWList domains
+        run: |
+          cd gfwlist2dnsmasq || exit 1
+          chmod +x ./gfwlist2dnsmasq.sh
+          ./gfwlist2dnsmasq.sh -l -o ./temp-gfwlist.txt
 
-      - name: Get and add direct domains into temp-direct.txt file
-        run: |
-          curl -sSL $CHINA_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > temp-direct.txt
-          curl -sSL ${CUSTOM_DIRECT} | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' >> temp-direct.txt
+      - name: Get and add direct domains into temp-direct.txt file
+        run: |
+          curl -sSL $CHINA_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > temp-direct.txt
+          curl -sSL ${CUSTOM_DIRECT} | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' >> temp-direct.txt
 
-      - name: Get and add proxy domains into temp-proxy.txt file
-        run: |
-          cat ./gfwlist2dnsmasq/temp-gfwlist.txt | perl -ne '/^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/ && print "$1\n"' > temp-proxy.txt
-          curl -sSL $GOOGLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' >> temp-proxy.txt
-          curl -sSL $APPLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' >> temp-apple.txt
-          cat temp-apple.txt >> temp-proxy.txt
-          curl -sSL ${CUSTOM_PROXY} | grep -Ev ":@cn" | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' >> temp-proxy.txt
+      - name: Get and add proxy domains into temp-proxy.txt file
+        run: |
+          cat ./gfwlist2dnsmasq/temp-gfwlist.txt | perl -ne '/^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/ && print "$1\n"' > temp-proxy.txt
+          curl -sSL $GOOGLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' >> temp-proxy.txt
+          curl -sSL $APPLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' >> temp-apple.txt
+          cat temp-apple.txt >> temp-proxy.txt
+          curl -sSL ${CUSTOM_PROXY} | grep -Ev ":@cn" | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' >> temp-proxy.txt
 
-      - name: Get and add reject domains into temp-reject.txt file
-        run: |
-          curl -sSL $EASYLISTCHINA_EASYLIST_REJECT_URL | perl -ne '/^\|\|([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})\^$/ && print "$1\n"' | perl -ne 'print if not /^[0-9]{1,3}(\.[0-9]{1,3}){3}$/' > temp-reject.txt
-          curl -sSL $ADGUARD_DNS_REJECT_URL | perl -ne '/^\|\|([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})\^$/ && print "$1\n"' | perl -ne 'print if not /^[0-9]{1,3}(\.[0-9]{1,3}){3}$/' >> temp-reject.txt
-          curl -sSL $PETERLOWE_REJECT_URL | perl -ne '/^127\.0\.0\.1\s([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})$/ && print "$1\n"' >> temp-reject.txt
-          curl -sSL $DANPOLLOCK_REJECT_URL | perl -ne '/^127\.0\.0\.1\s([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})/ && print "$1\n"' | sed '1d' >> temp-reject.txt
+      - name: Get and add reject domains into temp-reject.txt file
+        run: |
+          curl -sSL $EASYLISTCHINA_EASYLIST_REJECT_URL | perl -ne '/^\|\|([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})\^$/ && print "$1\n"' | perl -ne 'print if not /^[0-9]{1,3}(\.[0-9]{1,3}){3}$/' > temp-reject.txt
+          curl -sSL $ADGUARD_DNS_REJECT_URL | perl -ne '/^\|\|([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})\^$/ && print "$1\n"' | perl -ne 'print if not /^[0-9]{1,3}(\.[0-9]{1,3}){3}$/' >> temp-reject.txt
+          curl -sSL $PETERLOWE_REJECT_URL | perl -ne '/^127\.0\.0\.1\s([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})$/ && print "$1\n"' >> temp-reject.txt
+          curl -sSL $DANPOLLOCK_REJECT_URL | perl -ne '/^127\.0\.0\.1\s([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})/ && print "$1\n"' | sed '1d' >> temp-reject.txt
 
-      - name: Add proxy, direct and reject domains from "hidden" branch to appropriate temp files
-        run: |
-          cat proxy.txt >> temp-proxy.txt
-          cat direct.txt >> temp-direct.txt
-          cat reject.txt >> temp-reject.txt
+      - name: Add proxy, direct and reject domains from "hidden" branch to appropriate temp files
+        run: |
+          cat proxy.txt >> temp-proxy.txt
+          cat direct.txt >> temp-direct.txt
+          cat reject.txt >> temp-reject.txt
 
-      - name: Sort and generate redundant lists
-        run: |
-          cat temp-proxy.txt | sort --ignore-case -u > proxy-list.txt
-          cat temp-direct.txt | sort --ignore-case -u > direct-list.txt
-          cat temp-reject.txt | sort --ignore-case -u > reject-list.txt
+      - name: Sort and generate redundant lists
+        run: |
+          cat temp-proxy.txt | sort --ignore-case -u > proxy-list.txt
+          cat temp-direct.txt | sort --ignore-case -u > direct-list.txt
+          cat temp-reject.txt | sort --ignore-case -u > reject-list.txt
 
-      - name: Write lists to data directory
-        run: |
-          cat direct-list.txt > ./community/data/cn
-          cat direct-list.txt > direct-tld-list.txt
-          cat proxy-list.txt > ./community/data/geolocation-\!cn
-          cat proxy-list.txt > proxy-tld-list.txt
-          cat reject-list.txt > ./community/data/category-ads-all
-          cat reject-list.txt > reject-tld-list.txt
+      - name: Write lists to data directory
+        run: |
+          cat direct-list.txt > ./community/data/cn
+          cat direct-list.txt > direct-tld-list.txt
+          cat proxy-list.txt > ./community/data/geolocation-\!cn
+          cat proxy-list.txt > proxy-tld-list.txt
+          cat reject-list.txt > ./community/data/category-ads-all
+          cat reject-list.txt > reject-tld-list.txt
 
-      - name: Create lists
-        run: |
-          curl -sSL $CHINA_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/china-list
-          cp ./community/data/china-list china-list.txt
-          curl -sSL $GOOGLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "full:$1\n"' > ./community/data/google-cn
-          cp ./community/data/google-cn google-cn.txt
-          curl -sSL $APPLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "full:$1\n"' > ./community/data/apple-cn
-          cp ./community/data/apple-cn apple-cn.txt
-          cat ./gfwlist2dnsmasq/temp-gfwlist.txt | perl -ne '/^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/ && print "$1\n"' >> ./community/data/gfw
-          cat ./community/data/gfw | sort --ignore-case -u > gfw.txt
-          curl -sSL $WIN_SPY | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-spy
-          cp ./community/data/win-spy win-spy.txt
-          curl -sSL $WIN_UPDATE | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-update
-          cp ./community/data/win-update win-update.txt
-          curl -sSL $WIN_EXTRA | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-extra
-          cp ./community/data/win-extra win-extra.txt
-          curl -sSL $OISD_FULL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-full
-          cp ./community/data/oisd-full oisd-full.txt
-          curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-small
-          cp ./community/data/oisd-small oisd-small.txt
-          
-          curl -sSL $RULE_ADS | grep "0.0.0.0" | awk '{print $2}' > ./community/data/rule-ads
-          curl -sSL $RULE_ADS_EXTENDED >> ./community/data/rule-ads
-          cp ./community/data/rule-ads rule-ads.txt
-          
-          curl -sSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw
-          cp ./community/data/oisd-nsfw oisd-nsfw.txt
-          
-          wget -qO ./community/data/antiscam $ANTISCAM
-          sed -i '/[^a-zA-Z0-9\.\-]/d' ./community/data/antiscam
-          cp ./community/data/antiscam antiscam.txt
-          
-          wget -qO ./community/data/rule-doh $DOH_DNS && cp ./community/data/rule-doh rule-doh.txt
-          wget -qO ./community/data/rule-gaming $RULE_GAME && cp ./community/data/rule-gaming rule-gaming.txt
-          echo "full:steampowered.com" > ./community/data/category-games
-          
-          wget -qO ./community/data/rule-indo $RULE_INDO && cp ./community/data/rule-indo rule-indo.txt
-          wget -qO ./community/data/rule-playstore $RULE_PS && cp ./community/data/rule-playstore rule-playstore.txt
-          wget -qO ./community/data/rule-sosmed $RULE_SOSMED && cp ./community/data/rule-sosmed rule-sosmed.txt
-          wget -qO ./community/data/rule-streaming $RULE_STREAMING && cp ./community/data/rule-streaming rule-streaming.txt
-          wget -qO ./community/data/rule-umum $RULE_UMUM && cp ./community/data/rule-umum rule-umum.txt
-          
-          # =========================================================================
-          # PROSES UNDUH & DOUBLE-CLEANING KUSTOM (RULE-ECO & RULE-MICROSOFT)
-          # =========================================================================
-          wget -qO ./community/data/rule-eco $RULE_ECO
-          sed -i 's/\r//g' ./community/data/rule-eco
-          sed -i '/^[[:space:]]*$/d' ./community/data/rule-eco
-          cp ./community/data/rule-eco rule-eco.txt
+      - name: Create lists
+        run: |
+          curl -sSL $CHINA_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/china-list
+          cp ./community/data/china-list china-list.txt
+          curl -sSL $GOOGLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "full:$1\n"' > ./community/data/google-cn
+          cp ./community/data/google-cn google-cn.txt
+          curl -sSL $APPLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "full:$1\n"' > ./community/data/apple-cn
+          cp ./community/data/apple-cn apple-cn.txt
+          cat ./gfwlist2dnsmasq/temp-gfwlist.txt | perl -ne '/^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/ && print "$1\n"' >> ./community/data/gfw
+          cat ./community/data/gfw | sort --ignore-case -u > gfw.txt
+          curl -sSL $WIN_SPY | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-spy
+          cp ./community/data/win-spy win-spy.txt
+          curl -sSL $WIN_UPDATE | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-update
+          cp ./community/data/win-update win-update.txt
+          curl -sSL $WIN_EXTRA | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-extra
+          cp ./community/data/win-extra win-extra.txt
+          curl -sSL $OISD_FULL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-full
+          cp ./community/data/oisd-full oisd-full.txt
+          curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-small
+          cp ./community/data/oisd-small oisd-small.txt
+          
+          curl -sSL $RULE_ADS | grep "0.0.0.0" | awk '{print $2}' > ./community/data/rule-ads
+          curl -sSL $RULE_ADS_EXTENDED >> ./community/data/rule-ads
+          cp ./community/data/rule-ads rule-ads.txt
+          
+          curl -sSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw
+          cp ./community/data/oisd-nsfw oisd-nsfw.txt
+          
+          wget -qO ./community/data/antiscam $ANTISCAM
+          sed -i '/[^a-zA-Z0-9\.\-]/d' ./community/data/antiscam
+          cp ./community/data/antiscam antiscam.txt
+          
+          wget -qO ./community/data/rule-doh $DOH_DNS && cp ./community/data/rule-doh rule-doh.txt
+          wget -qO ./community/data/rule-gaming $RULE_GAME && cp ./community/data/rule-gaming rule-gaming.txt
+          echo "full:steampowered.com" > ./community/data/category-games
+          
+          wget -qO ./community/data/rule-indo $RULE_INDO && cp ./community/data/rule-indo rule-indo.txt
+          wget -qO ./community/data/rule-playstore $RULE_PS && cp ./community/data/rule-playstore rule-playstore.txt
+          wget -qO ./community/data/rule-sosmed $RULE_SOSMED && cp ./community/data/rule-sosmed rule-sosmed.txt
+          wget -qO ./community/data/rule-streaming $RULE_STREAMING && cp ./community/data/rule-streaming rule-streaming.txt
+          wget -qO ./community/data/rule-umum $RULE_UMUM && cp ./community/data/rule-umum rule-umum.txt
+          
+          # =========================================================================
+          # PROSES UNDUH & DOUBLE-CLEANING KHUSUS UNTUK RULE-ECO ANDA
+          # =========================================================================
+          wget -qO ./community/data/rule-eco $RULE_ECO
+          sed -i 's/\r//g' ./community/data/rule-eco
+          sed -i '/^[[:space:]]*$/d' ./community/data/rule-eco
+          cp ./community/data/rule-eco rule-eco.txt
+          # =========================================================================
 
-          wget -qO ./community/data/rule-microsoft $RULE_MICROSOFT
-          sed -i 's/\r//g' ./community/data/rule-microsoft
-          sed -i '/^[[:space:]]*$/d' ./community/data/rule-microsoft
-          cp ./community/data/rule-microsoft rule-microsoft.txt
-          # =========================================================================
+          wget -qO ./community/data/rule-ipcheck $RULE_IPCHECK && cp ./community/data/rule-ipcheck rule-ipcheck.txt
+          echo "full:ipv6.google.com" > ./community/data/test-ipv6
+          
+          wget -qO ./community/data/videoconference $RULE_VIDCONFERENCE && cp ./community/data/videoconference videoconference.txt
+          wget -qO ./community/data/urltest $URLTEST && cp ./community/data/urltest urltest.txt
+          wget -qO ./community/data/rule-speedtest $RULE_SPEEDTEST && cp ./community/data/rule-speedtest rule-speedtest.txt
+          wget -qO ./community/data/rule-malicious $MALICIOUS_HOST && cp ./community/data/rule-malicious rule-malicious.txt
+          wget -qO ./community/data/bank-id $RULE_BANK_ID && cp ./community/data/bank-id bank-id.txt
 
-          wget -qO ./community/data/rule-ipcheck $RULE_IPCHECK && cp ./community/data/rule-ipcheck rule-ipcheck.txt
-          echo "full:ipv6.google.com" > ./community/data/test-ipv6
-          
-          wget -qO ./community/data/videoconference $RULE_VIDCONFERENCE && cp ./community/data/videoconference videoconference.txt
-          wget -qO ./community/data/urltest $URLTEST && cp ./community/data/urltest urltest.txt
-          wget -qO ./community/data/rule-speedtest $RULE_SPEEDTEST && cp ./community/data/rule-speedtest rule-speedtest.txt
-          wget -qO ./community/data/rule-malicious $MALICIOUS_HOST && cp ./community/data/rule-malicious rule-malicious.txt
-          wget -qO ./community/data/bank-id $RULE_BANK_ID && cp ./community/data/bank-id bank-id.txt
+          # Pendeteksi & Penambal Otomatis File Dummy
+          echo "Menjalankan mesin penyembuh dependensi..."
+          grep -hroE 'include:[a-zA-Z0-9\.\-]+' ./community/data/ | awk -F: '{print $2}' | sort -u | while read -r list_name; do
+            if [ ! -f "./community/data/$list_name" ]; then
+              echo "Membuat data dummy aman untuk list hulu yang hilang: $list_name"
+              echo "full:example-dependency-fix.com" > "./community/data/$list_name"
+            fi
+          done
 
-          # Pendeteksi & Penambal Otomatis File Dummy
-          echo "Menjalankan mesin penyembuh dependensi..."
-          grep -hroE 'include:[a-zA-Z0-9\.\-]+' ./community/data/ | awk -F: '{print $2}' | sort -u | while read -r list_name; do
-            if [ ! -f "./community/data/$list_name" ]; then
-              echo "Membuat data dummy aman untuk list hulu yang hilang: $list_name"
-              echo "full:example-dependency-fix.com" > "./community/data/$list_name"
-            fi
-          done
+      - name: Filter and save d3ward.txt
+        run: |
+          python <<EOF
+          import requests
+          url = "https://raw.githubusercontent.com/d3ward/toolz/master/src/d3host.txt"
+          response = requests.get(url)
+          filtered_lines = [line.replace("0.0.0.0 ", "") for line in response.text.split("\n") if "0.0.0.0 " in line]
+          with open("./community/data/d3ward", "w") as file:
+              for line in filtered_lines:
+                  file.write(line + "\n")
+          EOF
 
-      - name: Filter and save d3ward.txt
-        run: |
-          python <<EOF
-          import requests
-          url = "https://raw.githubusercontent.com/d3ward/toolz/master/src/d3host.txt"
-          response = requests.get(url)
-          filtered_lines = [line.replace("0.0.0.0 ", "") for line in response.text.split("\n") if "0.0.0.0 " in line]
-          with open("./community/data/d3ward", "w") as file:
-              for line in filtered_lines:
-                  file.write(line + "\n")
-          EOF
+      - name: Build geosite.dat using Go Install
+        run: |
+          mkdir -p publish
+          go install github.com/v2fly/domain-list-community@latest
+          ~/go/bin/domain-list-community --datapath=./community/data
+          mv ./dlc.dat ./publish/geosite.dat
 
-      - name: Build geosite.dat using Go Install
-        run: |
-          mkdir -p publish
-          go install github.com/v2fly/domain-list-community@latest
-          ~/go/bin/domain-list-community --datapath=./community/data
-          mv ./dlc.dat ./publish/geosite.dat
+      - name: Move and zip files and generate sha256 hash
+        run: |
+          install -Dp ./geoip.dat ./publish/geoip.dat
+          install -Dp ./geoip.dat.sha256sum ./publish/geoip.dat.sha256sum
+          install -p {proxy,direct,reject}-tld-list.txt ./publish/ || true
+          install -p {proxy,direct,reject}-list.txt ./publish/ || true
+          install -p {china-list,apple-cn,google-cn,gfw,win-spy,win-update,win-extra}.txt ./publish/ || true
+          install -p {antiscam,rule-doh,rule-gaming,rule-indo,rule-playstore,rule-sosmed,rule-streaming,rule-umum,rule-ipcheck,videoconference,urltest,rule-speedtest,rule-malicious,bank-id,oisd-full,oisd-small,rule-ads,oisd-nsfw,rule-eco}.txt ./publish/ || true
+          cd ./publish || exit 1
+          sha256sum geosite.dat > geosite.dat.sha256sum
 
-      - name: Move and zip files and generate sha256 hash
-        run: |
-          install -Dp ./geoip.dat ./publish/geoip.dat
-          install -Dp ./geoip.dat.sha256sum ./publish/geoip.dat.sha256sum
-          install -p {proxy,direct,reject}-tld-list.txt ./publish/ || true
-          install -p {proxy,direct,reject}-list.txt ./publish/ || true
-          install -p {china-list,apple-cn,google-cn,gfw,win-spy,win-update,win-extra}.txt ./publish/ || true
-          install -p {antiscam,rule-doh,rule-gaming,rule-indo,rule-playstore,rule-sosmed,rule-streaming,rule-umum,rule-ipcheck,videoconference,urltest,rule-speedtest,rule-malicious,bank-id,oisd-full,oisd-small,rule-ads,oisd-nsfw,rule-eco,rule-microsoft}.txt ./publish/ || true
-          cd ./publish || exit 1
-          sha256sum geosite.dat > geosite.dat.sha256sum
+      - name: Convert to Sing-Box geoassets
+        run: |
+          wget -q https://github.com/malikshi/Notes/releases/download/v2box/v2box
+          chmod +x v2box
+          ./v2box migrate geoip -i ./publish/geoip.dat -o geoip.db
+          ./v2box migrate geosite -i ./publish/geosite.dat -o geosite.db
+          mv -f geoip.db ./publish/
+          mv -f geosite.db ./publish/
+          cd ./publish || exit 1
+          sha256sum geosite.db > geosite.db.sha256sum
+          sha256sum geoip.db > geoip.db.sha256sum
 
-      - name: Convert to Sing-Box geoassets
-        run: |
-          wget -q https://github.com/malikshi/Notes/releases/download/v2box/v2box
-          chmod +x v2box
-          ./v2box migrate geoip -i ./publish/geoip.dat -o geoip.db
-          ./v2box migrate geosite -i ./publish/geosite.dat -o geosite.db
-          mv -f geoip.db ./publish/
-          mv -f geosite.db ./publish/
-          cd ./publish || exit 1
-          sha256sum geosite.db > geosite.db.sha256sum
-          sha256sum geoip.db > geoip.db.sha256sum
-
-      - name: Deploy to GitHub Releases
-        uses: softprops/action-gh-release@v2
-        with:
-          name: latest
-          tag_name: latest
-          draft: false
-          prerelease: false
-          files: ./publish/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          name: latest
+          tag_name: latest
+          draft: false
+          prerelease: false
+          files: ./publish/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
