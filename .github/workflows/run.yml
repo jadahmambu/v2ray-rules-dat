@@ -81,14 +81,14 @@ jobs:
           curl -fsSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw || echo "full:ex.com" > ./community/data/oisd-nsfw
           cp ./community/data/oisd-nsfw oisd-nsfw.txt
 
-          # 7. RULE-ECO (Proses Konversi Otomatis dari REPO ANDA)
+          # 7. RULE-ECO (Konversi otomatis ke format asli V2Fly)
           wget -qO ./community/data/rule-eco-raw $RULE_ECO || echo "full:ex.com" > ./community/data/rule-eco-raw
           sed -i 's/\r//g' ./community/data/rule-eco-raw || true
           > ./community/data/rule-eco
           while read -r line || [ -n "$line" ]; do
             [[ -z "$line" || "$line" =~ ^# ]] && continue
             if [[ "$line" =~ ^keyword: ]]; then
-              echo "regex:${line#keyword:}" >> ./community/data/rule-eco
+              echo "$line" >> ./community/data/rule-eco
             elif [[ "$line" =~ ^domain: ]]; then
               echo "${line#domain:}" >> ./community/data/rule-eco
             else
@@ -97,14 +97,14 @@ jobs:
           done < ./community/data/rule-eco-raw
           cp ./community/data/rule-eco rule-eco.txt
 
-          # 8. RULE-MICROSOFT (Proses Konversi Otomatis dari REPO ANDA)
+          # 8. RULE-MICROSOFT (Sama persis dengan pola skrip ECO)
           wget -qO ./community/data/rule-microsoft-raw $RULE_MICROSOFT || echo "full:ex.com" > ./community/data/rule-microsoft-raw
           sed -i 's/\r//g' ./community/data/rule-microsoft-raw || true
           > ./community/data/rule-microsoft
           while read -r line || [ -n "$line" ]; do
             [[ -z "$line" || "$line" =~ ^# ]] && continue
             if [[ "$line" =~ ^keyword: ]]; then
-              echo "regex:${line#keyword:}" >> ./community/data/rule-microsoft
+              echo "$line" >> ./community/data/rule-microsoft
             elif [[ "$line" =~ ^domain: ]]; then
               echo "${line#domain:}" >> ./community/data/rule-microsoft
             else
