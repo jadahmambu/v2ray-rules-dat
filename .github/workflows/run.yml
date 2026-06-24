@@ -81,16 +81,36 @@ jobs:
           curl -fsSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw || echo "full:ex.com" > ./community/data/oisd-nsfw
           cp ./community/data/oisd-nsfw oisd-nsfw.txt
 
-          # 7. RULE-ECO
-          wget -qO ./community/data/rule-eco $RULE_ECO || echo "full:ex.com" > ./community/data/rule-eco
-          sed -i 's/\r//g' ./community/data/rule-eco || true
-          sed -i '/^[[:space:]]*$/d' ./community/data/rule-eco || true
+          # 7. RULE-ECO (Proses Konversi Otomatis dari REPO ANDA)
+          wget -qO ./community/data/rule-eco-raw $RULE_ECO || echo "full:ex.com" > ./community/data/rule-eco-raw
+          sed -i 's/\r//g' ./community/data/rule-eco-raw || true
+          > ./community/data/rule-eco
+          while read -r line || [ -n "$line" ]; do
+            [[ -z "$line" || "$line" =~ ^# ]] && continue
+            if [[ "$line" =~ ^keyword: ]]; then
+              echo "regex:${line#keyword:}" >> ./community/data/rule-eco
+            elif [[ "$line" =~ ^domain: ]]; then
+              echo "${line#domain:}" >> ./community/data/rule-eco
+            else
+              echo "$line" >> ./community/data/rule-eco
+            fi
+          done < ./community/data/rule-eco-raw
           cp ./community/data/rule-eco rule-eco.txt
 
-          # 8. RULE-MICROSOFT
-          wget -qO ./community/data/rule-microsoft $RULE_MICROSOFT || echo "full:ex.com" > ./community/data/rule-microsoft
-          sed -i 's/\r//g' ./community/data/rule-microsoft || true
-          sed -i '/^[[:space:]]*$/d' ./community/data/rule-microsoft || true
+          # 8. RULE-MICROSOFT (Proses Konversi Otomatis dari REPO ANDA)
+          wget -qO ./community/data/rule-microsoft-raw $RULE_MICROSOFT || echo "full:ex.com" > ./community/data/rule-microsoft-raw
+          sed -i 's/\r//g' ./community/data/rule-microsoft-raw || true
+          > ./community/data/rule-microsoft
+          while read -r line || [ -n "$line" ]; do
+            [[ -z "$line" || "$line" =~ ^# ]] && continue
+            if [[ "$line" =~ ^keyword: ]]; then
+              echo "regex:${line#keyword:}" >> ./community/data/rule-microsoft
+            elif [[ "$line" =~ ^domain: ]]; then
+              echo "${line#domain:}" >> ./community/data/rule-microsoft
+            else
+              echo "$line" >> ./community/data/rule-microsoft
+            fi
+          done < ./community/data/rule-microsoft-raw
           cp ./community/data/rule-microsoft rule-microsoft.txt
 
           # SYARAT COMPILER: Buat berkas cn dan geolocation-!cn dummy agar compiler V2Fly tidak eror
