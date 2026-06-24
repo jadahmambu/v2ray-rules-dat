@@ -46,7 +46,9 @@ jobs:
         shell: bash
 
       - name: Prepare Data Directory
-        run: mkdir -p community/data publish
+        run: |
+          rm -rf community publish
+          mkdir -p community/data publish
 
       - name: Get geoip.dat relative files
         run: |
@@ -114,14 +116,12 @@ jobs:
 
       - name: Automated Dependency Patcher (Fix Include Error)
         run: |
-          # Membaca baris include di dalam data, mengubahnya ke huruf kecil, dan membuat file dummy otomatis jika filenya belum ada
           grep -hroE 'include:[a-zA-Z0-9\.\-]+' ./community/data/ | awk -F: '{print tolower($2)}' | sort -u | while read -r list_name; do
             if [ ! -f "./community/data/$list_name" ]; then
               echo "Membuat berkas dummy aman untuk dependensi: $list_name"
               echo "full:example-fix-$list_name.com" > "./community/data/$list_name"
             fi
           done
-          # Salinkan hasil final rule-ads ke akar pangkalan luar
           cp ./community/data/rule-ads rule-ads.txt
 
       - name: Build geosite.dat using Go Install
@@ -158,5 +158,7 @@ jobs:
           draft: false
           prerelease: false
           files: ./publish/*
+          overwrite: true
+          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
