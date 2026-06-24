@@ -69,7 +69,9 @@ jobs:
 
       - name: Build geosite.dat
         run: |
-          go run ./community/main.go
+          cd community
+          go run main.go
+          cd ..
           cp ./community/geosite.dat ./geosite.dat
 
       - name: Download GeoIP
