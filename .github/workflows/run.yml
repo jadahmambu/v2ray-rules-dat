@@ -35,11 +35,6 @@ jobs:
           echo "RELEASE_NAME=Released on $(date +%Y%m%d%H%M)" >> $GITHUB_ENV
           echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
           
-          # PERBAIKAN: Menggunakan jsDelivr CDN agar terhindar dari Error Exit Code 8 / 404 / Rate Limit
-          echo "CHINA_DOMAINS_URL=https://fastly.jsdelivr.net/gh/felixonmars/dnsmasq-china-list@master/accelerated-domains.china.conf" >> $GITHUB_ENV
-          echo "GOOGLE_DOMAINS_URL=https://fastly.jsdelivr.net/gh/felixonmars/dnsmasq-china-list@master/google.china.conf" >> $GITHUB_ENV
-          echo "APPLE_DOMAINS_URL=https://fastly.jsdelivr.net/gh/felixonmars/dnsmasq-china-list@master/apple.china.conf" >> $GITHUB_ENV
-          
           echo "EASYLISTCHINA_EASYLIST_REJECT_URL=https://easylist-downloads.adblockplus.org/easylistchina+easylist.txt" >> $GITHUB_ENV
           echo "PETERLOWE_REJECT_URL=https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext" >> $GITHUB_ENV
           echo "ADGUARD_DNS_REJECT_URL=https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt" >> $GITHUB_ENV
@@ -106,15 +101,11 @@ jobs:
 
       - name: Get and add direct domains into temp-direct.txt file
         run: |
-          curl -sSL $CHINA_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > temp-direct.txt
-          curl -sSL ${CUSTOM_DIRECT} | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' >> temp-direct.txt
+          curl -sSL ${CUSTOM_DIRECT} | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' > temp-direct.txt
 
       - name: Get and add proxy domains into temp-proxy.txt file
         run: |
           cat ./gfwlist2dnsmasq/temp-gfwlist.txt | perl -ne '/^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/ && print "$1\n"' > temp-proxy.txt
-          curl -sSL $GOOGLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' >> temp-proxy.txt
-          curl -sSL $APPLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' >> temp-apple.txt
-          cat temp-apple.txt >> temp-proxy.txt
           curl -sSL ${CUSTOM_PROXY} | grep -Ev ":@cn" | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' >> temp-proxy.txt
 
       - name: Get and add reject domains into temp-reject.txt file
@@ -147,12 +138,6 @@ jobs:
 
       - name: Create lists
         run: |
-          curl -sSL $CHINA_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/china-list
-          cp ./community/data/china-list china-list.txt
-          curl -sSL $GOOGLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "full:$1\n"' > ./community/data/google-cn
-          cp ./community/data/google-cn google-cn.txt
-          curl -sSL $APPLE_DOMAINS_URL | perl -ne '/^server=\/([^\/]+)\// && print "full:$1\n"' > ./community/data/apple-cn
-          cp ./community/data/apple-cn apple-cn.txt
           cat ./gfwlist2dnsmasq/temp-gfwlist.txt | perl -ne '/^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/ && print "$1\n"' >> ./community/data/gfw
           cat ./community/data/gfw | sort --ignore-case -u > gfw.txt
           curl -sSL $WIN_SPY | grep "0.0.0.0" | awk '{print $2}' > ./community/data/win-spy
@@ -244,7 +229,7 @@ jobs:
           install -Dp ./geoip.dat.sha256sum ./publish/geoip.dat.sha256sum
           install -p {proxy,direct,reject}-tld-list.txt ./publish/ || true
           install -p {proxy,direct,reject}-list.txt ./publish/ || true
-          install -p {china-list,apple-cn,google-cn,gfw,win-spy,win-update,win-extra}.txt ./publish/ || true
+          install -p {gfw,win-spy,win-update,win-extra}.txt ./publish/ || true
           install -p {antiscam,rule-doh,rule-gaming,rule-indo,rule-playstore,rule-sosmed,rule-streaming,rule-umum,rule-ipcheck,videoconference,urltest,rule-speedtest,rule-malicious,bank-id,oisd-full,oisd-small,rule-ads,oisd-nsfw,rule-eco,rule-microsoft}.txt ./publish/ || true
           cd ./publish || exit 1
           sha256sum geosite.dat > geosite.dat.sha256sum
