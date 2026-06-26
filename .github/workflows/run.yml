@@ -81,16 +81,19 @@ jobs:
           curl -fsSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw || echo "full:ex.com" > ./community/data/oisd-nsfw
           cp ./community/data/oisd-nsfw oisd-nsfw.txt
 
-          # 7. RULE-ECO (Konversi otomatis ke format asli V2Fly)
+          # 7. RULE-ECO (Pembersihan & Konversi Otomatis ke Format Asli V2Fly)
           wget -qO ./community/data/rule-eco-raw $RULE_ECO || echo "full:ex.com" > ./community/data/rule-eco-raw
           sed -i 's/\r//g' ./community/data/rule-eco-raw || true
           > ./community/data/rule-eco
           while read -r line || [ -n "$line" ]; do
             [[ -z "$line" || "$line" =~ ^# ]] && continue
+            line=$(echo "$line" | xargs)
             if [[ "$line" =~ ^keyword: ]]; then
               echo "$line" >> ./community/data/rule-eco
             elif [[ "$line" =~ ^domain: ]]; then
               echo "${line#domain:}" >> ./community/data/rule-eco
+            elif [[ "$line" =~ ^regex: || "$line" =~ ^regexp: ]]; then
+              echo "regexp:${line#*regex:}" >> ./community/data/rule-eco
             else
               echo "$line" >> ./community/data/rule-eco
             fi
@@ -103,10 +106,13 @@ jobs:
           > ./community/data/rule-microsoft
           while read -r line || [ -n "$line" ]; do
             [[ -z "$line" || "$line" =~ ^# ]] && continue
+            line=$(echo "$line" | xargs)
             if [[ "$line" =~ ^keyword: ]]; then
               echo "$line" >> ./community/data/rule-microsoft
             elif [[ "$line" =~ ^domain: ]]; then
               echo "${line#domain:}" >> ./community/data/rule-microsoft
+            elif [[ "$line" =~ ^regex: || "$line" =~ ^regexp: ]]; then
+              echo "regexp:${line#*regex:}" >> ./community/data/rule-microsoft
             else
               echo "$line" >> ./community/data/rule-microsoft
             fi
@@ -127,7 +133,7 @@ jobs:
               filtered_lines = [line.replace("0.0.0.0 ", "") for line in response.text.split("\n") if "0.0.0.0 " in line]
           except Exception:
               filtered_lines = []
-          
+           
           with open("./community/data/rule-ads", "a") as file:
               for line in filtered_lines:
                   if line.strip():
