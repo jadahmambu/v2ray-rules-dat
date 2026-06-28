@@ -193,7 +193,7 @@ jobs:
           [ -f geoip.db ] && sha256sum geoip.db > geoip.db.sha256sum || true
 
       - name: Deploy to GitHub Releases
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: latest
           tag_name: latest
