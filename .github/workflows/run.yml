@@ -43,6 +43,12 @@ jobs:
           # JALUR KHUSUS REPO ANDA
           echo "RULE_ECO=https://raw.githubusercontent.com/jadahmambu/ocrule/main/rule_eco.txt" >> $GITHUB_ENV
           echo "RULE_MICROSOFT=https://raw.githubusercontent.com/jadahmambu/ocrule/main/rule_microsoft.txt" >> $GITHUB_ENV
+
+          # TAMBAHAN ATURAN BARU
+          echo "ADGUARD_DNS_REJECT_URL=https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt" >> $GITHUB_ENV
+          echo "RULE_SOSMED=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_sosmed.txt" >> $GITHUB_ENV
+          echo "RULE_STREAMING=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule_streaming.txt" >> $GITHUB_ENV
+          echo "RULE_VIDCONFERENCE=https://raw.githubusercontent.com/malikshi/v2ray-rules-dat/rule/rule-videoconference.txt" >> $GITHUB_ENV
         shell: bash
 
       - name: Prepare Data Directory
@@ -81,7 +87,7 @@ jobs:
           curl -fsSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw || echo "full:ex.com" > ./community/data/oisd-nsfw
           cp ./community/data/oisd-nsfw oisd-nsfw.txt
 
-          # 7. RULE-ECO (Konversi otomatis ke format asli V2Fly)
+          # 7. RULE-ECO
           wget -qO ./community/data/rule-eco-raw $RULE_ECO || echo "full:ex.com" > ./community/data/rule-eco-raw
           sed -i 's/\r//g' ./community/data/rule-eco-raw || true
           > ./community/data/rule-eco
@@ -97,7 +103,7 @@ jobs:
           done < ./community/data/rule-eco-raw
           cp ./community/data/rule-eco rule-eco.txt
 
-          # 8. RULE-MICROSOFT (Sama persis dengan pola skrip ECO)
+          # 8. RULE-MICROSOFT
           wget -qO ./community/data/rule-microsoft-raw $RULE_MICROSOFT || echo "full:ex.com" > ./community/data/rule-microsoft-raw
           sed -i 's/\r//g' ./community/data/rule-microsoft-raw || true
           > ./community/data/rule-microsoft
@@ -113,6 +119,22 @@ jobs:
           done < ./community/data/rule-microsoft-raw
           cp ./community/data/rule-microsoft rule-microsoft.txt
 
+          # 9. ADGUARD DNS REJECT (Ekstraksi format adguard ||domain.com^ ke plain domain)
+          wget -qO- $ADGUARD_DNS_REJECT_URL | grep -E '^\|\|[a-zA-Z0-9\.\-]+\^' | sed 's/^||//;s/\^//' > ./community/data/adguard-dns || echo "full:ex.com" > ./community/data/adguard-dns
+          cp ./community/data/adguard-dns adguard-dns.txt
+
+          # 10. RULE-SOSMED
+          wget -qO ./community/data/sosmed $RULE_SOSMED || echo "full:ex.com" > ./community/data/sosmed
+          cp ./community/data/sosmed sosmed.txt
+
+          # 11. RULE-STREAMING
+          wget -qO ./community/data/streaming $RULE_STREAMING || echo "full:ex.com" > ./community/data/streaming
+          cp ./community/data/streaming streaming.txt
+
+          # 12. RULE-VIDCONFERENCE
+          wget -qO ./community/data/vidconference $RULE_VIDCONFERENCE || echo "full:ex.com" > ./community/data/vidconference
+          cp ./community/data/vidconference vidconference.txt
+
           # SYARAT COMPILER: Buat berkas cn dan geolocation-!cn dummy agar compiler V2Fly tidak eror
           echo "full:example-direct.com" > ./community/data/cn
           echo "full:example-proxy.com" > ./community/data/geolocation-\!cn
@@ -127,7 +149,7 @@ jobs:
               filtered_lines = [line.replace("0.0.0.0 ", "") for line in response.text.split("\n") if "0.0.0.0 " in line]
           except Exception:
               filtered_lines = []
-          
+            
           with open("./community/data/rule-ads", "a") as file:
               for line in filtered_lines:
                   if line.strip():
@@ -154,7 +176,7 @@ jobs:
         run: |
           [ -f ./geoip.dat ] && install -Dp ./geoip.dat ./publish/geoip.dat || true
           [ -f ./geoip.dat.sha256sum ] && install -Dp ./geoip.dat.sha256sum ./publish/geoip.dat.sha256sum || true
-          install -p {antiscam,rule-ads,rule-malicious,bank-id,oisd-full,oisd-nsfw,rule-eco,rule-microsoft}.txt ./publish/ || true
+          install -p {antiscam,rule-ads,rule-malicious,bank-id,oisd-full,oisd-nsfw,rule-eco,rule-microsoft,adguard-dns,sosmed,streaming,vidconference}.txt ./publish/ || true
           cd ./publish || exit 1
           sha256sum geosite.dat > geosite.dat.sha256sum
 
