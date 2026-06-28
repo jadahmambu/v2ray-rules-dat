@@ -1,47 +1,50 @@
 # GEO ASSETS
 
-Generate custom geosite and geoip based on [Loyalsoldier](https://github.com/Loyalsoldier/v2ray-rules-dat) with addtional list.
+Automated generator for custom `geosite` and `geoip` dat/db files based on [Loyalsoldier](https://github.com/Loyalsoldier/v2ray-rules-dat) infrastructure with additional customized lists.
 
-## GEOSITE.DAT
+---
 
-- Same as Original but with addtional list:
-  - `geosite:oisd-full`
-  - `geosite:oisd-small`
-  - `geosite:oisd-nsfw`
-  - `geosite:d3ward`
-  - `geosite:antiscam`
-  - `geosite:rule-ads`
-  - `geosite:rule-doh`
-  - `geosite:rule-gaming`
-  - `geosite:rule-indo`
-  - `geosite:rule-playstore`
-  - `geosite:rule-sosmed`
-  - `geosite:rule-streaming`
-  - `geosite:rule-umum`
-  - `geosite:rule-ipcheck`
-  - `geosite:rule-speedtest`
-  - `geosite:videoconference`
-  - `geosite:rule-malicious`
-  - `geosite:urltest`
+## 🌐 GEOSITE.DAT
 
-> More details for addtional [list](https://github.com/malikshi/v2ray-rules-dat/blob/b3f67d1c2cc83bb2a84ea117b1e0caa340f7a130/.github/workflows/run.yml#L20)
+The `geosite.dat` file is compiled daily using the official compiler `v2fly/domain-list-community@latest`. It contains all the original lists from Loyalsoldier, seamlessly integrated with the following custom rules that have been strictly sanitized (removing adblocker modifiers like `$important`, wildcard asterisks `*`, and exact-match pipes `|` to ensure compiler stability):
 
+| Category / List Name | Description | Upstream Source |
+| :--- | :--- | :--- |
+| `geosite:antiscam` | Blocks fraudulent and scam domains. | [malikshi/antiscam](https://github.com/malikshi/antiscam) |
+| `geosite:rule-ads` | Extended ad-blocking list (merged with d3ward). | [malikshi/v2ray-rules-dat](https://github.com/malikshi/v2ray-rules-dat) & [d3ward/toolz](https://github.com/d3ward/toolz) |
+| `geosite:rule-malicious` | Lightweight DNSBL blocklist targeting malicious hostnames. | [elliotwutingfeng/Inversion-DNSBL-Blocklists](https://github.com/elliotwutingfeng/Inversion-DNSBL-Blocklists) |
+| `geosite:bank-id` | Indonesian banking and financial services. | [malikshi/v2ray-rules-dat](https://github.com/malikshi/v2ray-rules-dat) |
+| `geosite:oisd-full` | Comprehensive DNS-level ad and tracker protection. | [oisd.nl (dnsmasq format)](https://oisd.nl) |
+| `geosite:oisd-nsfw` | Adult content and NSFW filtering list. | [nsfw.oisd.nl](https://oisd.nl) |
+| `geosite:rule-eco` | Custom optimization and eco-mode routing lists. | Local repository (`rule_eco.txt`) |
+| `geosite:rule-microsoft` | Dedicated Microsoft services and telemetry rules. | Local repository (`rule_microsoft.txt`) |
+| `geosite:adguard-dns` | Aggressive DNS tracking and advertisement filter. | [AdGuardSDNSFilter](https://github.com/AdGuardTeam/AdGuardSDNSFilter) |
+| `geosite:sosmed` | Social media platforms (Facebook, Instagram, Twitter, TikTok, etc.). | [malikshi/v2ray-rules-dat](https://github.com/malikshi/v2ray-rules-dat) |
+| `geosite:streaming` | Video and audio streaming services (Netflix, YouTube, Spotify, etc.). | [malikshi/v2ray-rules-dat](https://github.com/malikshi/v2ray-rules-dat) |
+| `geosite:vidconference` | Video conferencing optimization (Zoom, MS Teams, Webex, etc.). | [malikshi/v2ray-rules-dat](https://github.com/malikshi/v2ray-rules-dat) |
 
-## GEOIP.DAT
+---
 
-- Generated via repository [@Loyalsoldier/geoip](https://github.com/Loyalsoldier/geoip)
-- The global IP addresses (IPv4 and IPv6) come from [MaxMind GeoLite2](https://dev.maxmind.com/geoip/geoip2/geolite2/), and the IPv4 addresses under the `CN` (Mainland China) category come from [ipip .net](https://github.com/17mon/china_ip_list) and [@gaoyifan/china-operator-ip](https://github.com/gaoyifan/china-operator-ip), `cn` [MaxMind GeoLite2](https://dev.maxmind.com/geoip/geoip2/geolite2/) and [@gaoyifan/china-operator-ip](https://github.com/gaoyifan/china-operator-ip)
-- New categories (convenient for users with special needs):
-  - `geoip:cloudflare`
-  - `geoip:cloudfront`
-  - `geoip:facebook`
-  - `geoip:fastly`
-  - `geoip:google`
-  - `geoip:netflix`
-  - `geoip:telegram`
-  - `geoip:twitter`
-  - `geoip:malicious`
-  - `geoip:firewall`
-  - `geoip:geoid`
-  - `geoip:doh`
-  - `geoip:tor`
+## 🗺️ GEOIP.DAT
+
+Generated on top of the [@Loyalsoldier/geoip](https://github.com/Loyalsoldier/geoip) ecosystem. The core dataset is fetched and synced directly with daily release tags from `malikshi/geoip` to provide optimal IP routing precision.
+
+### 📊 Data Sources & Features
+* **Global IP Address Base:** Powered by **MaxMind GeoLite2** for both IPv4 and IPv6 networks.
+* **China Regional Optimization (`CN`):** Mainland China networks are heavily enhanced using optimized routing tables from **ipip.net** and **@gaoyifan/china-operator-ip**.
+* **Advanced Routing Categories:** Pre-built tags compiled specifically for proxy rule management, infrastructure bypassing, and privacy control:
+
+```text
+├── geoip:cloudflare       # Cloudflare CDN Nodes
+├── geoip:cloudfront       # AWS CloudFront Infrastructure
+├── geoip:facebook         # Meta / Facebook Network Ranges
+├── geoip:fastly           # Fastly Edge Cloud Network
+├── geoip:google           # Google Services & Infrastructure
+├── geoip:netflix          # Netflix Streaming & Open Connect ISP IPs
+├── geoip:telegram         # Telegram Messenger Datacenters
+├── geoip:twitter          # X / Twitter Network Infrastructure
+├── geoip:malicious        # Known Malicious & Phishing IPs
+├── geoip:firewall         # Security & Restricted Firewalls
+├── geoip:geoid            # Custom Geo-Identity IPs
+├── geoip:doh              # DNS-over-HTTPS Server Endpoints
+└── geoip:tor              # Tor Onion Network Exit Nodes
