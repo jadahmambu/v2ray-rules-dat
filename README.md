@@ -19,9 +19,9 @@ The `geosite.dat` file is compiled daily using the official compiler `v2fly/doma
 | `geosite:rule-eco` | Custom optimization and eco-mode routing lists. | Local repository (`rule_eco.txt`) |
 | `geosite:rule-microsoft` | Dedicated Microsoft services and telemetry rules. | Local repository (`rule_microsoft.txt`) |
 | `geosite:adguard-dns` | Aggressive DNS tracking and advertisement filter. | [AdGuardSDNSFilter](https://github.com/AdGuardTeam/AdGuardSDNSFilter) |
-| `geosite:sosmed` | Social media platforms (Facebook, Instagram, Twitter, TikTok, etc.). | [malikshi/v2ray-rules-dat](https://github.com/malikshi/v2ray-rules-dat) |
-| `geosite:streaming` | Video and audio streaming services (Netflix, YouTube, Spotify, etc.). | [malikshi/v2ray-rules-dat](https://github.com/malikshi/v2ray-rules-dat) |
-| `geosite:vidconference` | Video conferencing optimization (Zoom, MS Teams, Webex, etc.). | [malikshi/v2ray-rules-dat](https://github.com/malikshi/v2ray-rules-dat) |
+| `geosite:sosmed` | Social media platforms (TikTok, Meta, Instagram, X/Twitter, SnackVideo, etc.). | Local repository (`rule_sosmed.txt`) |
+| `geosite:streaming` | Video and audio streaming services (YouTube, Netflix, Disney+, Spotify, etc.). | Local repository (`rule_streaming.txt`) |
+| `geosite:vidconference` | Video conferencing optimization (Zoom, MS Teams, Google Meet, Webex, etc.). | Local repository (`rule_videoconference.txt`) |
 
 ---
 
