@@ -118,8 +118,13 @@ jobs:
           done < ./community/data/rule-microsoft-raw
           cp ./community/data/rule-microsoft rule-microsoft.txt
 
-          # 9. ADGUARD DNS REJECT (Tersimpan sebagai adguard-dns di folder data agar ikut terkompilasi)
-          wget -qO- $ADGUARD_DNS_REJECT_URL | grep -E '^\|\|[a-zA-Z0-9\.\-]+' | sed 's/^||//;s/\^//;s/\$.*//;s/|//g;s/\*//g;s/\.$//' | grep -v '\.\.' | grep -v '-\.' | grep -v '\.-' | grep -E '^[a-zA-Z0-9][a-zA-Z0-9\.-]*[a-zA-Z0-9]\.[a-zA-Z]{2,}$' | awk 'NF' | sort -u > ./community/data/adguard-dns || echo "full:ex.com" > ./community/data/adguard-dns
+          # 9. ADGUARD DNS REJECT (Ekstraksi & pembersihan dengan garansi file tidak kosong)
+          wget -qO- $ADGUARD_DNS_REJECT_URL | grep -E '^\|\|[a-zA-Z0-9\.\-]+' | sed 's/^||//;s/\^//;s/\$.*//;s/|//g;s/\*//g;s/\.$//' | grep -v '\.\.' | grep -v '-\.' | grep -v '\.-' | grep -E '^[a-zA-Z0-9][a-zA-Z0-9\.-]*[a-zA-Z0-9]\.[a-zA-Z]{2,}$' | awk 'NF' | sort -u > ./community/data/adguard-dns || true
+          
+          # Pastikan file adguard-dns berisi data minimal agar terdaftar di geosite.dat
+          if [ ! -s ./community/data/adguard-dns ]; then
+            echo "full:adguard-dns-dummy.com" > ./community/data/adguard-dns
+          fi
           cp ./community/data/adguard-dns adguard-dns.txt
 
           # 10. RULE-SOSMED
@@ -168,7 +173,7 @@ jobs:
               echo "$line" >> ./community/data/vidconference
             fi
           done < ./community/data/rule-vidconference-raw
-          cp ./community/data/vidconference vidconference.txt
+          cp ./community/data/rule-vidconference vidconference.txt
 
           # SYARAT COMPILER: Buat berkas cn dan geolocation-!cn dummy
           echo "full:example-direct.com" > ./community/data/cn
@@ -227,7 +232,7 @@ jobs:
           [ -f geosite.db ] && sha256sum geosite.db > geosite.db.sha256sum || true
           [ -f geoip.db ] && sha256sum geoip.db > geoip.db.sha256sum || true
           
-          # HAPUS SEMUA BERKAS KOSONG (0 BYTE) SEBELUM UPLOAD
+          # Hapus berkas kosong kecuali geosite
           find . -type f -empty -delete
 
       - name: Deploy to GitHub Releases
