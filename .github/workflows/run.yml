@@ -177,7 +177,7 @@ jobs:
 
           # SYARAT COMPILER: Buat berkas cn dan geolocation-!cn dummy
           echo "full:example-direct.com" > ./community/data/cn
-          echo "full:example-proxy.com" > ./community/data/geolocation-!cn
+          echo "full:example-proxy.com" > "./community/data/geolocation-!cn"
 
       - name: Filter and append d3ward to rule-ads
         run: |
@@ -426,7 +426,7 @@ jobs:
 
           # SYARAT COMPILER: Buat berkas cn dan geolocation-!cn dummy
           echo "full:example-direct.com" > ./community/data/cn
-          echo "full:example-proxy.com" > ./community/data/geolocation-!cn
+          echo "full:example-proxy.com" > "./community/data/geolocation-!cn"
 
       - name: Filter and append d3ward to rule-ads
         run: |
