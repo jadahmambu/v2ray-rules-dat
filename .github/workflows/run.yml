@@ -118,7 +118,7 @@ jobs:
           done < ./community/data/rule-microsoft-raw
           cp ./community/data/rule-microsoft rule-microsoft.txt
 
-          # 9. ADGUARD DNS REJECT (Pembersihan ekstra ketat)
+          # 9. ADGUARD DNS REJECT (Tersimpan sebagai adguard-dns di folder data agar ikut terkompilasi)
           wget -qO- $ADGUARD_DNS_REJECT_URL | grep -E '^\|\|[a-zA-Z0-9\.\-]+' | sed 's/^||//;s/\^//;s/\$.*//;s/|//g;s/\*//g;s/\.$//' | grep -v '\.\.' | grep -v '-\.' | grep -v '\.-' | grep -E '^[a-zA-Z0-9][a-zA-Z0-9\.-]*[a-zA-Z0-9]\.[a-zA-Z]{2,}$' | awk 'NF' | sort -u > ./community/data/adguard-dns || echo "full:ex.com" > ./community/data/adguard-dns
           cp ./community/data/adguard-dns adguard-dns.txt
 
