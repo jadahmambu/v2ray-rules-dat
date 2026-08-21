@@ -118,7 +118,7 @@ jobs:
           done < ./community/data/rule-microsoft-raw
           cp ./community/data/rule-microsoft rule-microsoft.txt
 
-          # 9. ADGUARD DNS REJECT (Membuang trailing dot, double dot, dan label dengan tanda - di awal/akhir)
+          # 9. ADGUARD DNS REJECT (Pembersihan ekstra ketat)
           wget -qO- $ADGUARD_DNS_REJECT_URL | grep -E '^\|\|[a-zA-Z0-9\.\-]+' | sed 's/^||//;s/\^//;s/\$.*//;s/|//g;s/\*//g;s/\.$//' | grep -v '\.\.' | grep -v '-\.' | grep -v '\.-' | grep -E '^[a-zA-Z0-9][a-zA-Z0-9\.-]*[a-zA-Z0-9]\.[a-zA-Z]{2,}$' | awk 'NF' | sort -u > ./community/data/adguard-dns || echo "full:ex.com" > ./community/data/adguard-dns
           cp ./community/data/adguard-dns adguard-dns.txt
 
@@ -207,7 +207,7 @@ jobs:
           ~/go/bin/domain-list-community --datapath=./community/data
           mv ./dlc.dat ./publish/geosite.dat
 
-      - name: Move files and generate sha256 hash
+      - name: Move files, generate sha256 hash & cleanup empty files
         run: |
           [ -f ./geoip.dat ] && install -Dp ./geoip.dat ./publish/geoip.dat || true
           [ -f ./geoip.dat.sha256sum ] && install -Dp ./geoip.dat.sha256sum ./publish/geoip.dat.sha256sum || true
@@ -226,6 +226,9 @@ jobs:
           cd ./publish || exit 1
           [ -f geosite.db ] && sha256sum geosite.db > geosite.db.sha256sum || true
           [ -f geoip.db ] && sha256sum geoip.db > geoip.db.sha256sum || true
+          
+          # HAPUS SEMUA BERKAS KOSONG (0 BYTE) SEBELUM UPLOAD
+          find . -type f -empty -delete
 
       - name: Deploy to GitHub Releases
         uses: softprops/action-gh-release@v2
@@ -237,5 +240,6 @@ jobs:
           files: ./publish/*
           overwrite_files: true
           make_latest: true
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
